@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Current Standing - {{ username }}</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+        h1 { color: #333; }
+        .chart-container { width: 90%; margin: auto; }
+        .info { margin-top: 30px; font-size: 18px; }
+        a { text-decoration: none; color: blue; }
+    </style>
+</head>
+<body>
+    <h1>📊 Current Standing of the Business</h1>
+    <p>Logged in as: <strong>{{ username }}</strong> | <a href="{{ url_for('logout') }}">Logout</a></p>
+
+    <div class="chart-container">
+        <canvas id="standingChart"></canvas>
+    </div>
+
+    <div class="info">
+        {% if chart_data.best_seller %}
+            <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
+            <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
+        {% else %}
+            <p>No sales data available yet.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        const ctx = document.getElementById('standingChart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: {{ chart_data.labels | tojson }},
+                datasets: [
+                    {
+                        label: 'Quantity Sold',
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        data: {{ chart_data.sold | tojson }}
+                    },
+                    {
+                        label: 'Quantity Remaining',
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
+                        data: {{ chart_data.remaining | tojson }}
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Product Sales vs Remaining Stock'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
