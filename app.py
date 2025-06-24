@@ -3,7 +3,7 @@ import os
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = os.environ.get('SECRET_KEY', 'your_default_secret')
 
 UPLOAD_FOLDER = 'uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -73,5 +73,6 @@ def logout():
     flash('You have been logged out.')
     return redirect(url_for('login'))
 
+# ✅ Only run this locally (Render will ignore it)
 if __name__ == '__main__':
     app.run(debug=True)
