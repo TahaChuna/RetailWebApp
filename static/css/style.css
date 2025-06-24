@@ -1,0 +1,39 @@
+body {
+    background-image: url('../images/kids-bg.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: center;
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
+    margin: 20px;
+}
+
+h1, h2, h3 {
+    color: #005f99;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin-top: 20px;
+}
+
+table, th, td {
+    border: 1px solid #ccc;
+}
+
+th {
+    background-color: #007acc;
+    color: white;
+    padding: 8px;
+}
+
+td {
+    padding: 8px;
+}
+
+a {
+    color: #007acc;
+    text-decoration: none;
+}

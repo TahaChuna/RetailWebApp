@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Retail Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background-image: url("{{ url_for('static', filename='images/kids-bg.jpg') }}");
+            background-size: cover;
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+        }
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-links a {
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .time-user {
+            font-size: 14px;
+        }
+        .container {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.85);
+            margin: 30px auto;
+            width: 90%;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-links">
+            <a href="/dashboard">Home</a>
+            <a href="/current-standing">Current Standing</a>
+            <a href="/inventory">Inventory</a>
+            <a href="/sales">Today’s Sales</a>
+            <a href="/invoice">Generate Invoice</a>
+            <a href="/customers">Customer DB</a>
+        </div>
+        <div class="time-user">
+            <span id="current-time"></span> | Logged in as: <strong>{{ username }}</strong>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>DIAMOND KIDS WEAR & ESSENTIALS</h2>
+        <p>Select a section above to view more details.</p>
+    </div>
+
+    <script>
+        // Live time display
+        function updateTime() {
+            const now = new Date();
+            document.getElementById("current-time").textContent = now.toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime(); // initial call
+    </script>
+</body>
+</html>
