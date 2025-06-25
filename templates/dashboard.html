@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Retail Dashboard</title>
+    <meta charset="UTF-8">
+    <title>Dashboard - {{ username }}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
@@ -28,11 +29,45 @@
         }
         .container {
             padding: 20px;
-            background-color: rgba(255, 255, 255, 0.85);
+            background-color: rgba(255, 255, 255, 0.88);
             margin: 30px auto;
             width: 90%;
             border-radius: 10px;
+            text-align: center;
         }
+        h1 span {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        .multicolor span:nth-child(1) { color: red; }
+        .multicolor span:nth-child(2) { color: orange; }
+        .multicolor span:nth-child(3) { color: gold; }
+        .multicolor span:nth-child(4) { color: green; }
+        .multicolor span:nth-child(5) { color: blue; }
+        .multicolor span:nth-child(6) { color: indigo; }
+        .multicolor span:nth-child(7) { color: violet; }
+        .multicolor span:nth-child(8) { color: hotpink; }
+        .multicolor span:nth-child(9) { color: teal; }
+        .multicolor span:nth-child(10) { color: brown; }
+        .multicolor span:nth-child(11) { color: coral; }
+        .multicolor span:nth-child(12) { color: navy; }
+        .upload-section {
+            margin-top: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 25px;
+        }
+        th, td {
+            padding: 8px 12px;
+            border: 1px solid #aaa;
+            background-color: #fff;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a { text-decoration: none; color: #007BFF; }
     </style>
 </head>
 <body>
@@ -51,18 +86,51 @@
     </div>
 
     <div class="container">
-        <h2>DIAMOND KIDS WEAR & ESSENTIALS</h2>
-        <p>Select a section above to view more details.</p>
+        <h1 class="multicolor">
+            {% for letter in "Diamond Kids Wear!!" %}
+                <span>{{ letter }}</span>
+            {% endfor %}
+        </h1>
+        <h2>Hey {{ username }}!! Welcome Back!!</h2>
+
+        <div class="upload-section">
+            <form method="POST" enctype="multipart/form-data">
+                <label><strong>Upload Excel File:</strong></label>
+                <input type="file" name="file" accept=".xlsx" required>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
+
+        {% if data.inventory %}
+            <h3>📦 Inventory Data</h3>
+            <table>
+                <thead>
+                    <tr>
+                        {% for col in data.inventory[0].keys() %}
+                            <th>{{ col }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in data.inventory %}
+                        <tr>
+                            {% for value in row.values() %}
+                                <td>{{ value }}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
     </div>
 
     <script>
-        // Live time display
         function updateTime() {
             const now = new Date();
             document.getElementById("current-time").textContent = now.toLocaleString();
         }
         setInterval(updateTime, 1000);
-        updateTime(); // initial call
+        updateTime();
     </script>
 </body>
 </html>

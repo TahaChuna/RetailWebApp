@@ -3,32 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <title>Current Standing - {{ username }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
-        h1 { color: #333; }
-        .chart-container { width: 90%; margin: auto; }
-        .info { margin-top: 30px; font-size: 18px; }
-        a { text-decoration: none; color: blue; }
+        body {
+            background-image: url("{{ url_for('static', filename='images/kids-bg.jpg') }}");
+            background-size: cover;
+            font-family: 'Segoe UI', sans-serif;
+            color: #333;
+        }
+        .navbar {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav-links a {
+            margin: 0 15px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #007BFF;
+        }
+        .time-user {
+            font-size: 14px;
+        }
+        .container {
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.88);
+            margin: 30px auto;
+            width: 90%;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .chart-container {
+            width: 95%;
+            margin: 30px auto;
+        }
+        table {
+            width: 100%;
+            margin-top: 30px;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #bbb;
+            background-color: #fff;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .info {
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: left;
+        }
     </style>
 </head>
 <body>
-    <h1>📊 Current Standing of the Business</h1>
-    <p>Logged in as: <strong>{{ username }}</strong> | <a href="{{ url_for('logout') }}">Logout</a></p>
-
-    <div class="chart-container">
-        <canvas id="standingChart"></canvas>
+    <div class="navbar">
+        <div class="nav-links">
+            <a href="/dashboard">Home</a>
+            <a href="/current-standing">Current Standing</a>
+            <a href="/inventory">Inventory</a>
+            <a href="/sales">Today’s Sales</a>
+            <a href="/invoice">Generate Invoice</a>
+            <a href="/customers">Customer DB</a>
+        </div>
+        <div class="time-user">
+            <span id="current-time"></span> | Logged in as: <strong>{{ username }}</strong>
+        </div>
     </div>
 
-    <div class="info">
-        {% if chart_data.best_seller %}
+    <div class="container">
+        <h2>📊 Current Standing of the Business</h2>
+
+        <div class="chart-container">
+            <canvas id="standingChart"></canvas>
+        </div>
+
+        <div class="info">
             <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
             <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
-        {% else %}
-            <p>No sales data available yet.</p>
-        {% endif %}
+        </div>
+
+        <h3>📦 Inventory Listing (Searchable)</h3>
+        <table id="inventoryTable" class="display">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Quantity Available</th>
+                    <th>Quantity Sold</th>
+                    <th>Quantity Remaining</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for i in range(chart_data.labels | length) %}
+                    <tr>
+                        <td>{{ chart_data.labels[i] }}</td>
+                        <td>{{ chart_data.names[i] }}</td>
+                        <td>{{ chart_data.original[i] }}</td>
+                        <td>{{ chart_data.sold[i] }}</td>
+                        <td>{{ chart_data.remaining[i] }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
+    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
+    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
     <script>
         const ctx = document.getElementById('standingChart').getContext('2d');
         const chart = new Chart(ctx, {
@@ -59,6 +145,17 @@
                 }
             }
         });
+
+        $(document).ready(function () {
+            $('#inventoryTable').DataTable();
+        });
+
+        function updateTime() {
+            const now = new Date();
+            document.getElementById("current-time").textContent = now.toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
     </script>
 </body>
 </html>
