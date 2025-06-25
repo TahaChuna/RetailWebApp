@@ -78,10 +78,19 @@ def current_standing():
     return render_template('current_standing.html', status=status, data=result)
 
 @app.route('/invoice', methods=['GET', 'POST'])
-def invoice():
-    global invoice_count, customer_data
-    if 'username' not in session:
-        return redirect(url_for('login'))
+def generate_invoice():
+    if request.method == 'POST':
+        # process invoice...
+        pass
+
+    # Load product-price mapping (replace with your real logic)
+    product_price_dict = {
+        'P001': 250,
+        'P002': 400,
+        'P003': 300
+    }
+
+    return render_template('invoice.html', product_price_dict=product_price_dict)
 
     if request.method == 'POST':
         name = request.form['customer_name']
