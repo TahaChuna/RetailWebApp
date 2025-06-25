@@ -1,141 +1,70 @@
-<!-- current_standing.html -->
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Current Standing - {{ username }}</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <style>
-        /* All CSS remains the same as you provided */
-    </style>
-</head>
-<body>
-    <div class="navbar">
-        <div class="nav-links">
-            <a href="{{ url_for('dashboard') }}">🏠 Home</a>
-            <a href="{{ url_for('current_standing') }}">📊 Current Standing</a>
-            <a href="{{ url_for('inventory') }}">📦 Inventory</a>
-            <a href="{{ url_for('sales') }}">💰 Today’s Sales</a>
-            <a href="{{ url_for('invoice') }}">🧾 Generate Invoice</a>
-            <a href="{{ url_for('customers') }}">👥 Customer DB</a>
-        </div>
-        <div class="time-user">
-            <span id="current-time"></span> | Logged in as: <strong>{{ username }}</strong>
-        </div>
-    </div>
+{% extends 'dashboard.html' %}
 
-    <div class="container">
-        <h2>📤 Upload Excel File</h2>
-        <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".xlsx" required>
-            <button type="submit">Upload</button>
-        </form>
+{% block title %}Current Standing - Diamond Kids Wear{% endblock %}
 
-        {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul style="color: green; font-weight: bold;">
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-        {% endwith %}
+{% block content %}
+<h2>📊 Current Standing of the Business</h2>
 
-        <h2>📊 Current Standing of the Business</h2>
+<!-- Upload Form -->
+<form method="POST" action="{{ url_for('current_standing') }}" enctype="multipart/form-data" style="margin-bottom: 20px;">
+    <label for="file">Upload Excel File:</label>
+    <input type="file" name="file" id="file" required>
+    <button type="submit">Upload</button>
+</form>
 
-        {% if chart_data %}
-            <div class="chart-container">
-                <canvas id="standingChart"></canvas>
-            </div>
+<!-- Upload Success Message -->
+{% if upload_success %}
+    <p style="color: green; font-weight: bold;">✅ File uploaded successfully!</p>
+{% endif %}
 
-            <div class="info">
-                {% if chart_data.best_seller %}
-                    <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
-                    <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
-                {% else %}
-                    <p>🔥 <strong>Best-Selling Product:</strong> Data not available</p>
-                    <p>🛒 <strong>Quantity Sold:</strong> Data not available</p>
-                {% endif %}
-            </div>
+<!-- Search Bar -->
+<input type="text" id="searchInput" placeholder="Search by Product ID..." onkeyup="searchTable()" style="padding: 8px; width: 300px; margin-bottom: 20px;">
 
-            <h3>📦 Inventory Listing (Searchable)</h3>
-            <table id="inventoryTable" class="display">
-                <thead>
-                    <tr>
-                        <th>Product ID</th>
-                        <th>Product Name</th>
-                        <th>Quantity Available</th>
-                        <th>Quantity Sold</th>
-                        <th>Quantity Remaining</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for i in range(chart_data.labels | length) %}
-                        <tr>
-                            <td>{{ chart_data.labels[i] }}</td>
-                            <td>{{ chart_data.names[i] }}</td>
-                            <td>{{ chart_data.original[i] }}</td>
-                            <td>{{ chart_data.sold[i] }}</td>
-                            <td>{{ chart_data.remaining[i] }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% else %}
-            <p style="font-weight: bold; color: red;">⚠️ No data available. Please upload an Excel file first.</p>
-        {% endif %}
-    </div>
+<!-- Product Table -->
+<table id="productTable" border="1" cellpadding="10" cellspacing="0">
+    <thead style="background-color: #e0e0e0;">
+        <tr>
+            <th>Product ID</th>
+            <th>Product Name</th>
+            <th>Quantity Sold</th>
+            <th>Remaining Quantity</th>
+            <th>Cost Price</th>
+            <th>Selling Price</th>
+            <th>Total Sales</th>
+            <th>Profit</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for product in products %}
+        <tr>
+            <td>{{ product.id }}</td>
+            <td>{{ product.name }}</td>
+            <td>{{ product.qty_sold }}</td>
+            <td>{{ product.qty_remaining }}</td>
+            <td>{{ product.cost_price }}</td>
+            <td>{{ product.selling_price }}</td>
+            <td>{{ product.total_sales }}</td>
+            <td>{{ product.profit }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
-    <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
-    <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+function searchTable() {
+    const input = document.getElementById("searchInput");
+    const filter = input.value.toUpperCase();
+    const table = document.getElementById("productTable");
+    const tr = table.getElementsByTagName("tr");
 
-    {% if chart_data %}
-    <script>
-        const ctx = document.getElementById('standingChart').getContext('2d');
-        const chart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: {{ chart_data.labels | tojson }},
-                datasets: [
-                    {
-                        label: 'Quantity Sold',
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                        data: {{ chart_data.sold | tojson }}
-                    },
-                    {
-                        label: 'Quantity Remaining',
-                        backgroundColor: 'rgba(255, 99, 132, 0.7)',
-                        data: {{ chart_data.remaining | tojson }}
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    title: {
-                        display: true,
-                        text: 'Product Sales vs Remaining Stock'
-                    }
-                }
-            }
-        });
-    </script>
-    {% endif %}
-
-    <script>
-        $(document).ready(function () {
-            $('#inventoryTable').DataTable();
-        });
-
-        function updateTime() {
-            const now = new Date();
-            document.getElementById("current-time").textContent = now.toLocaleString();
+    for (let i = 1; i < tr.length; i++) {
+        const td = tr[i].getElementsByTagName("td")[0];  // Search by Product ID
+        if (td) {
+            const txtValue = td.textContent || td.innerText;
+            tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
         }
-        setInterval(updateTime, 1000);
-        updateTime();
-    </script>
-</body>
-</html>
+    }
+}
+</script>
+
+{% endblock %}

@@ -2,213 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Dashboard - {{ username }}</title>
+    <title>{% block title %}Dashboard - Diamond Kids Wear{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
-            background-image: url("{{ url_for('static', filename='images/kids-bg.jpg') }}");
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            font-family: 'Segoe UI', sans-serif;
-            color: #333;
             margin: 0;
-            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #f8f9fa;
         }
 
         .navbar {
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 15px 30px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+            background-color: #fff;
+            padding: 14px 24px;
+            border-bottom: 1px solid #ddd;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
 
         .nav-links a {
             margin: 0 12px;
             text-decoration: none;
             font-weight: bold;
-            color: #007BFF;
-            font-size: 16px;
+            color: #333;
         }
 
         .nav-links a:hover {
-            text-decoration: underline;
+            color: #007bff;
         }
 
-        .time-user {
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .timestamp {
             font-size: 14px;
-            color: #555;
+            font-weight: bold;
         }
 
         .container {
             padding: 30px;
-            background-color: rgba(255, 255, 255, 0.88);
-            margin: 40px auto;
-            width: 92%;
-            max-width: 1100px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
         }
-
-        h1 span {
-            font-size: 36px;
-            font-weight: bold;
-        }
-
-        .multicolor span:nth-child(1) { color: red; }
-        .multicolor span:nth-child(2) { color: orange; }
-        .multicolor span:nth-child(3) { color: gold; }
-        .multicolor span:nth-child(4) { color: green; }
-        .multicolor span:nth-child(5) { color: blue; }
-        .multicolor span:nth-child(6) { color: indigo; }
-        .multicolor span:nth-child(7) { color: violet; }
-        .multicolor span:nth-child(8) { color: hotpink; }
-        .multicolor span:nth-child(9) { color: teal; }
-        .multicolor span:nth-child(10) { color: brown; }
-        .multicolor span:nth-child(11) { color: coral; }
-        .multicolor span:nth-child(12) { color: navy; }
 
         h2 {
-            color: #2c3e50;
-            margin-bottom: 25px;
-        }
-
-        .upload-section {
-            margin: 20px 0;
-        }
-
-        .upload-section input[type="file"] {
-            padding: 8px;
-            font-size: 16px;
-        }
-
-        .upload-section button {
-            margin-left: 15px;
-            padding: 8px 16px;
-            font-size: 16px;
-            font-weight: bold;
-            color: white;
-            background-color: #28a745;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-        }
-
-        .upload-section button:hover {
-            background-color: #218838;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 30px;
-        }
-
-        th, td {
-            padding: 10px 14px;
-            border: 1px solid #aaa;
-            background-color: #fff;
-            font-size: 15px;
-        }
-
-        th {
-            background-color: #f5f5f5;
-            font-weight: 600;
-        }
-
-        @media (max-width: 768px) {
-            .nav-links a {
-                display: block;
-                margin: 8px 0;
-            }
-
-            .container {
-                padding: 20px;
-            }
-
-            table {
-                font-size: 12px;
-            }
+            color: #444;
         }
     </style>
+    {% block head_extra %}{% endblock %}
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('time').textContent = timeString;
+        }
+        setInterval(updateTime, 1000);
+        window.onload = updateTime;
+    </script>
 </head>
 <body>
     <div class="navbar">
         <div class="nav-links">
-            <a href="{{ url_for('dashboard') }}">🏠 Home</a>
-            <a href="{{ url_for('current_standing') }}">📊 Current Standing</a>
-            <a href="{{ url_for('inventory') }}">📦 Inventory</a>
-            <a href="{{ url_for('sales') }}">💰 Today’s Sales</a>
-            <a href="{{ url_for('invoice') }}">🧾 Generate Invoice</a>
-            <a href="{{ url_for('customers') }}">👥 Customer DB</a>
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('current_standing') }}">Inventory</a>
+            <a href="{{ url_for('invoice') }}">Invoice Generation</a>
+            <a href="{{ url_for('customer_database') }}">Customer Database</a>
         </div>
-        <div class="time-user">
-            <span id="current-time"></span> | Logged in as: <strong>{{ username }}</strong>
-        </div>
+        <div class="timestamp">Current Time: <span id="time"></span></div>
+        <form method="POST" action="{{ url_for('logout') }}">
+            <button class="logout-btn">Logout</button>
+        </form>
     </div>
 
     <div class="container">
-        <h1 class="multicolor">
-            {% for letter in "Diamond Kids Wear!!" %}
-                <span>{{ letter }}</span>
-            {% endfor %}
-        </h1>
-        <h2>Hey {{ username }}!! Welcome Back!!</h2>
-
-        <div class="upload-section">
-            <form method="POST" enctype="multipart/form-data">
-                <label><strong>Upload Excel File:</strong></label>
-                <input type="file" name="file" accept=".xlsx" required>
-                <button type="submit">Upload</button>
-            </form>
-        </div>
-
-        {% if data.inventory %}
-            <h3>📦 Inventory Data</h3>
-            <table>
-                <thead>
-                    <tr>
-                        {% for col in data.inventory[0].keys() %}
-                            <th>{{ col }}</th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for row in data.inventory %}
-                        <tr>
-                            {% for value in row.values() %}
-                                <td>{{ value }}</td>
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        {% endif %}
+        {% block content %}
+        <!-- Page-specific content goes here -->
+        {% endblock %}
     </div>
-
-    <script>
-        function updateTime() {
-            const now = new Date();
-            document.getElementById("current-time").textContent = now.toLocaleString();
-        }
-        setInterval(updateTime, 1000);
-        updateTime();
-
-        // Auto logout after 3 minutes of inactivity
-        let logoutTimer;
-        function resetLogoutTimer() {
-            clearTimeout(logoutTimer);
-            logoutTimer = setTimeout(() => {
-                window.location.href = "{{ url_for('logout') }}";
-            }, 3 * 60 * 1000);
-        }
-
-        window.onload = resetLogoutTimer;
-        document.onmousemove = resetLogoutTimer;
-        document.onkeypress = resetLogoutTimer;
-    </script>
 </body>
 </html>

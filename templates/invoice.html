@@ -1,0 +1,89 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Generate Invoice - Diamond Kids Wear{% endblock %}
+
+{% block content %}
+<h2>🧾 Generate Invoice</h2>
+
+<form id="invoiceForm" method="POST" action="{{ url_for('generate_invoice') }}">
+    <div style="margin-bottom: 15px;">
+        <label><strong>Customer Name<span style="color: red;">*</span>:</strong></label>
+        <input type="text" name="customer_name" required>
+    </div>
+    <div style="margin-bottom: 15px;">
+        <label><strong>Customer Mobile Number:</strong></label>
+        <input type="text" name="customer_number">
+    </div>
+
+    <h3>➕ Add Products</h3>
+    <div id="productList">
+        <div class="product-entry">
+            <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
+            <input type="text" name="product_prices[]" placeholder="Price" readonly>
+        </div>
+    </div>
+    <button type="button" onclick="addProduct()">Add Another Product</button>
+
+    <div style="margin-top: 20px;">
+        <label><strong>Discount (%):</strong></label>
+        <input type="number" name="discount" id="discount" value="0" min="0" max="100" onchange="calculateTotal()">
+    </div>
+
+    <div style="margin-top: 20px;">
+        <label><strong>Payment Method:</strong></label>
+        <select name="payment_type" required>
+            <option value="Cash">Cash</option>
+            <option value="UPI">UPI</option>
+            <option value="Debit Card">Debit Card</option>
+            <option value="Credit Card">Credit Card</option>
+        </select>
+    </div>
+
+    <div style="margin-top: 30px;">
+        <strong>Total Amount: ₹<span id="totalAmount">0</span></strong>
+    </div>
+
+    <button type="submit" style="margin-top: 20px;">Generate Invoice</button>
+</form>
+
+<script>
+let productPrices = {{ product_price_dict | tojson }};
+
+function addProduct() {
+    const productList = document.getElementById('productList');
+    const entry = document.createElement('div');
+    entry.className = 'product-entry';
+    entry.innerHTML = `
+        <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
+        <input type="text" name="product_prices[]" placeholder="Price" readonly>
+    `;
+    productList.appendChild(entry);
+}
+
+function fetchPrice(input) {
+    const productID = input.value.trim();
+    const priceField = input.nextElementSibling;
+
+    if (productID in productPrices) {
+        priceField.value = productPrices[productID];
+    } else {
+        priceField.value = '';
+    }
+    calculateTotal();
+}
+
+function calculateTotal() {
+    const prices = document.getElementsByName('product_prices[]');
+    let sum = 0;
+    for (let p of prices) {
+        const val = parseFloat(p.value);
+        if (!isNaN(val)) sum += val;
+    }
+
+    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const discountedTotal = sum - (sum * discount / 100);
+
+    document.getElementById('totalAmount').textContent = discountedTotal.toFixed(2);
+}
+</script>
+{% endblock %}

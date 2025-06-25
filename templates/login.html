@@ -2,60 +2,115 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Diamond Kidswear</title>
+    <title>Login - Diamond Kids Wear</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
-            background: linear-gradient(to right, #f8cdda, #1d2b64);
+            margin: 0;
             font-family: 'Segoe UI', sans-serif;
+            background: url("{{ url_for('static', filename='images/kids-bg.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
-            margin: 0;
-            color: #333;
         }
-        .login-box {
-            background: white;
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.93);
             padding: 40px;
             border-radius: 12px;
-            box-shadow: 0px 4px 12px rgba(0,0,0,0.15);
             text-align: center;
-            width: 300px;
+            width: 380px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.2);
         }
-        h2 {
-            color: #1d2b64;
+
+        .shop-name {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .shop-name span {
+            font-size: 32px;
+        }
+
+        .colorful {
+            color: red;
+        }
+
+        .colorful:nth-child(2) { color: orange; }
+        .colorful:nth-child(3) { color: yellow; }
+        .colorful:nth-child(4) { color: green; }
+        .colorful:nth-child(5) { color: blue; }
+
+        .subtitle {
+            font-size: 16px;
+            color: #333;
             margin-bottom: 25px;
         }
-        input[type="text"],
-        input[type="password"] {
-            width: 90%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 10px 12px;
+            margin: 8px 0;
+            font-size: 15px;
             border-radius: 6px;
+            border: 1px solid #aaa;
         }
-        input[type="submit"] {
-            background-color: #1d2b64;
-            color: white;
-            padding: 10px 20px;
+
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
             border: none;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
             border-radius: 6px;
             cursor: pointer;
-            font-weight: bold;
         }
+
+        button:hover {
+            background-color: #218838;
+        }
+
         .error {
             color: red;
-            margin-top: 15px;
+            font-weight: bold;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
-    <div class="login-box">
-        <h2>Welcome to Diamond Kidswear</h2>
-        <form method="POST">
+    <div class="login-container">
+        <div class="shop-name">
+            <span class="colorful">D</span>
+            <span class="colorful">I</span>
+            <span class="colorful">A</span>
+            <span class="colorful">M</span>
+            <span class="colorful">O</span>
+            <span class="colorful">N</span>
+            <span class="colorful">D</span>
+            &nbsp;
+            <span class="colorful">K</span>
+            <span class="colorful">I</span>
+            <span class="colorful">D</span>
+            <span class="colorful">S</span>
+            &nbsp;
+            <span class="colorful">W</span>
+            <span class="colorful">E</span>
+            <span class="colorful">A</span>
+            <span class="colorful">R</span>
+        </div>
+        <div class="subtitle">
+            Welcome To Diamond Kids Wear<br>
+            Please login to access the Key Data of your Business
+        </div>
+        <form method="POST" action="{{ url_for('login') }}">
             <input type="text" name="username" placeholder="Username" required><br>
             <input type="password" name="password" placeholder="Password" required><br>
-            <input type="submit" value="Login">
+            <button type="submit">Login</button>
         </form>
         {% if error %}
             <div class="error">{{ error }}</div>

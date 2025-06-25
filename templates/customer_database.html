@@ -1,0 +1,30 @@
+{% extends 'dashboard.html' %}
+
+{% block title %}Customer Database - Diamond Kids Wear{% endblock %}
+
+{% block content %}
+<h2>📇 Customer Database</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Customer Name</th>
+            <th>Mobile Number</th>
+            <th>Bill Numbers</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for customer in customer_data %}
+        <tr>
+            <td>{{ customer.name }}</td>
+            <td>{{ customer.mobile }}</td>
+            <td>{{ customer.bills | join(' - ') }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<form method="POST" action="{{ url_for('export_customers') }}">
+    <button type="submit" class="button">Export to Excel</button>
+</form>
+{% endblock %}

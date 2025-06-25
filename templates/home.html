@@ -3,176 +3,151 @@
 <head>
     <meta charset="UTF-8">
     <title>Home - Diamond Kids Wear</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         body {
-            font-family: 'Poppins', sans-serif;
-            background: linear-gradient(to right, #fceabb, #f8b500);
             margin: 0;
-            padding: 30px;
+            font-family: 'Segoe UI', sans-serif;
+            background: url("{{ url_for('static', filename='images/kids-bg.jpg') }}") no-repeat center center fixed;
+            background-size: cover;
             color: #333;
         }
 
-        .header {
-            text-align: center;
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #f5f5f5;
+            padding: 12px 24px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
-        .multicolor-title span {
+        .nav-links a {
+            margin: 0 12px;
+            text-decoration: none;
+            font-weight: bold;
+            color: #444;
+        }
+
+        .nav-links a:hover {
+            color: #007bff;
+        }
+
+        .logout-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .logout-btn:hover {
+            background-color: #c82333;
+        }
+
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            margin: 40px auto;
+            max-width: 800px;
+            border-radius: 12px;
+            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+        }
+
+        .shop-title {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .shop-title span {
             font-size: 40px;
-            font-weight: 600;
-            display: inline-block;
-            padding: 0 3px;
         }
 
-        .multicolor-title span:nth-child(1) { color: #e74c3c; }
-        .multicolor-title span:nth-child(2) { color: #9b59b6; }
-        .multicolor-title span:nth-child(3) { color: #3498db; }
-        .multicolor-title span:nth-child(4) { color: #1abc9c; }
-        .multicolor-title span:nth-child(5) { color: #2ecc71; }
-        .multicolor-title span:nth-child(6) { color: #f39c12; }
-        .multicolor-title span:nth-child(7) { color: #d35400; }
-        .multicolor-title span:nth-child(8) { color: #e67e22; }
-        .multicolor-title span:nth-child(9) { color: #2980b9; }
-        .multicolor-title span:nth-child(10) { color: #8e44ad; }
-        .multicolor-title span:nth-child(n+11) { color: #2c3e50; }
-
-        h2 {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 24px;
-            color: #2c3e50;
+        .colorful {
+            color: red;
         }
 
-        .greeting {
-            font-size: 20px;
-            color: #34495e;
-            text-align: center;
-            margin-top: 25px;
-        }
+        .colorful:nth-child(2) { color: orange; }
+        .colorful:nth-child(3) { color: yellow; }
+        .colorful:nth-child(4) { color: green; }
+        .colorful:nth-child(5) { color: blue; }
 
-        .info-box {
-            background-color: #ffffffcc;
-            padding: 20px;
-            margin: 30px auto;
-            border-radius: 10px;
-            max-width: 700px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-        }
-
-        .info-box p,
-        .info-box ul {
+        .address {
             font-size: 18px;
-            margin-bottom: 15px;
-            text-align: left;
+            margin-bottom: 30px;
         }
 
-        .info-box ul {
+        .offers {
+            font-size: 18px;
+            line-height: 1.8;
+            text-align: left;
             padding-left: 20px;
         }
 
-        .nav {
-            text-align: center;
-            margin-top: 30px;
-        }
-
-        .nav a {
-            margin: 0 15px;
-            color: #2c3e50;
-            text-decoration: none;
+        .timestamp {
+            font-size: 16px;
             font-weight: bold;
-            font-size: 18px;
-            transition: color 0.2s ease;
-        }
-
-        .nav a:hover {
-            color: #000;
-            text-decoration: underline;
-        }
-
-        .footer-time {
-            text-align: center;
-            margin-top: 30px;
-            font-size: 14px;
-            color: #555;
-        }
-
-        @media (max-width: 600px) {
-            .multicolor-title span {
-                font-size: 28px;
-            }
-            h2 {
-                font-size: 20px;
-            }
-            .greeting {
-                font-size: 18px;
-            }
-            .info-box {
-                padding: 15px;
-                font-size: 16px;
-            }
-            .nav a {
-                display: block;
-                margin: 10px 0;
-                font-size: 16px;
-            }
         }
     </style>
-</head>
-<body>
-    <div class="header">
-        <div class="multicolor-title">
-            {% for letter in "DiamondKidsWear" %}
-                <span>{{ letter }}</span>
-            {% endfor %}
-        </div>
-        <h2>& Essentials</h2>
-    </div>
-
-    <div class="greeting">
-        Hey Chief!! Welcome Back, <strong>{{ username }}</strong>!
-    </div>
-
-    <div class="info-box">
-        <p><strong>🏪 Shop Address:</strong> SHOP NO 4, SHIV SHREE APT, K-VILLA, RABODI-THANE, 400601</p>
-        <p><strong>🛍️ What We Offer:</strong></p>
-        <ul>
-            <li>👕 Boys & Girls Clothing (0–12 years)</li>
-            <li>🍼 Baby Care Essentials – Diapers, Bottles, Teething Toys</li>
-            <li>🎁 Gift Sets & Accessories</li>
-            <li>🧼 Sanitary and Infant Hygiene Products</li>
-        </ul>
-    </div>
-
-    <div class="nav">
-        <a href="{{ url_for('current_standing') }}">📊 Current Standing</a>
-        <a href="{{ url_for('dashboard') }}">📦 Inventory</a>
-        <a href="{{ url_for('logout') }}">🚪 Logout</a>
-    </div>
-
-    <div class="footer-time">
-        Current Time: <span id="current-time"></span>
-    </div>
-
     <script>
         function updateTime() {
             const now = new Date();
-            document.getElementById("current-time").textContent = now.toLocaleString();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('time').textContent = timeString;
         }
         setInterval(updateTime, 1000);
-        updateTime();
-
-        // Auto logout after 3 minutes of inactivity
-        let logoutTimer;
-        function resetLogoutTimer() {
-            clearTimeout(logoutTimer);
-            logoutTimer = setTimeout(() => {
-                window.location.href = "{{ url_for('logout') }}";
-            }, 3 * 60 * 1000); // 3 minutes in milliseconds
-        }
-
-        window.onload = resetLogoutTimer;
-        document.onmousemove = resetLogoutTimer;
-        document.onkeypress = resetLogoutTimer;
+        window.onload = updateTime;
     </script>
+</head>
+<body>
+    <div class="navbar">
+        <div class="nav-links">
+            <a href="{{ url_for('home') }}">Home</a>
+            <a href="{{ url_for('current_standing') }}">Inventory</a>
+            <a href="{{ url_for('invoice') }}">Invoice Generation</a>
+            <a href="{{ url_for('customer_database') }}">Customer Database</a>
+        </div>
+        <div class="timestamp">Current Time: <span id="time"></span></div>
+        <form method="POST" action="{{ url_for('logout') }}">
+            <button class="logout-btn">Logout</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <div class="shop-title">
+            <span class="colorful">D</span>
+            <span class="colorful">I</span>
+            <span class="colorful">A</span>
+            <span class="colorful">M</span>
+            <span class="colorful">O</span>
+            <span class="colorful">N</span>
+            <span class="colorful">D</span>
+            &nbsp;
+            <span class="colorful">K</span>
+            <span class="colorful">I</span>
+            <span class="colorful">D</span>
+            <span class="colorful">S</span>
+            &nbsp;
+            <span class="colorful">W</span>
+            <span class="colorful">E</span>
+            <span class="colorful">A</span>
+            <span class="colorful">R</span>
+        </div>
+        <div class="address">
+            SHOP NO 4, SHIV SHREE APT, K-VILLA, RABODI, THANE-400601
+        </div>
+        <div class="offers">
+            🛍️ <strong>What We Offer:</strong><br><br>
+            👕 Boys & Girls Clothing (0–12 years)<br>
+            🍼 Baby Care Essentials – Diapers, Bottles, Teething Toys<br>
+            🎁 Gift Sets & Accessories<br>
+            🧼 Sanitary and Infant Hygiene Products
+        </div>
+    </div>
 </body>
 </html>
