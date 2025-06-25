@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 import pandas as pd
 from werkzeug.utils import secure_filename
 import os
@@ -19,14 +19,12 @@ users = {
     'Mustafa': 'Musa90'
 }
 
-
 @app.route('/')
 def home():
-    if 'username' in session:
-        return redirect(url_for('dashboard'))
-    return render_template('login.html')
+    if 'username' not in session:
+        return redirect(url_for('login'))
+    return render_template('home.html', username=session['username'])
 
-@app.route('/', methods=['GET', 'POST'])
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -34,7 +32,7 @@ def login():
         password = request.form['password']
         if username in users and users[username] == password:
             session['username'] = username
-            return redirect(url_for('dashboard'))
+            return redirect(url_for('home'))
         else:
             flash('Invalid username or password')
     return render_template('login.html')
@@ -42,41 +40,39 @@ def login():
 @app.route('/logout')
 def logout():
     session.pop('username', None)
-    return redirect(url_for('home'))
+    return redirect(url_for('login'))
 
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
+    return render_template('dashboard.html', username=session['username'])
 
-    data = {}
-    if request.method == 'POST':
-        file = request.files['file']
-        if file and file.filename.endswith('.xlsx'):
-            filename = secure_filename(file.filename)
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath)
-            df = pd.read_excel(filepath, sheet_name=None)
+@app.route('/upload', methods=['POST'])
+def upload():
+    if 'username' not in session:
+        return redirect(url_for('login'))
 
-            # Store in session temporarily
-            session['excel_path'] = filepath
-
-            # Parse inventory sheet
-            inventory = df.get('Inventory', pd.DataFrame()).fillna('')
-            data['inventory'] = inventory.to_dict(orient='records')
-
-    elif 'excel_path' in session:
-        filepath = session['excel_path']
+    file = request.files['file']
+    if file and file.filename.endswith('.xlsx'):
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
         df = pd.read_excel(filepath, sheet_name=None)
-        inventory = df.get('Inventory', pd.DataFrame()).fillna('')
-        data['inventory'] = inventory.to_dict(orient='records')
+        session['excel_path'] = filepath
+        flash('Excel file uploaded successfully!')
+    else:
+        flash('Invalid file format. Please upload a .xlsx file.')
 
-    return render_template('dashboard.html', username=session['username'], data=data)
+    return redirect(url_for('current_standing'))
 
 @app.route('/current-standing')
 def current_standing():
-    if 'username' not in session or 'excel_path' not in session:
-        return redirect(url_for('dashboard'))
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    if 'excel_path' not in session:
+        return render_template('current_standing.html', username=session['username'], chart_data=None)
 
     filepath = session['excel_path']
     df = pd.read_excel(filepath, sheet_name=None)
@@ -87,7 +83,6 @@ def current_standing():
     except KeyError:
         return "Required sheets ('Inventory', 'Sold List') not found in Excel file."
 
-    # Preparing data
     product_data = defaultdict(lambda: {
         'product_id': '',
         'product_name': '',
@@ -124,7 +119,6 @@ def current_standing():
 
     products = list(product_data.values())
 
-    # Find best seller
     best_seller = max(products, key=lambda x: x['quantity_sold'], default={
         'product_id': 'N/A', 'quantity_sold': 0
     })

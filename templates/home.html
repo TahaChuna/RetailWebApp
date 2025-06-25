@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home - Diamond Kids Wear</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #fceabb, #f8b500);
+            margin: 0;
+            padding: 30px;
+            color: #333;
+        }
+
+        .header {
+            text-align: center;
+        }
+
+        .multicolor-title span {
+            font-size: 40px;
+            font-weight: 600;
+            display: inline-block;
+            padding: 0 3px;
+        }
+
+        .multicolor-title span:nth-child(1) { color: #e74c3c; }
+        .multicolor-title span:nth-child(2) { color: #9b59b6; }
+        .multicolor-title span:nth-child(3) { color: #3498db; }
+        .multicolor-title span:nth-child(4) { color: #1abc9c; }
+        .multicolor-title span:nth-child(5) { color: #2ecc71; }
+        .multicolor-title span:nth-child(6) { color: #f39c12; }
+        .multicolor-title span:nth-child(7) { color: #d35400; }
+        .multicolor-title span:nth-child(8) { color: #e67e22; }
+        .multicolor-title span:nth-child(9) { color: #2980b9; }
+        .multicolor-title span:nth-child(10) { color: #8e44ad; }
+
+        h2 {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 24px;
+            color: #2c3e50;
+        }
+
+        .info-box {
+            background-color: #ffffffcc;
+            padding: 20px;
+            margin: 30px auto;
+            border-radius: 10px;
+            max-width: 700px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+
+        .info-box p {
+            font-size: 18px;
+            margin-bottom: 15px;
+        }
+
+        .greeting {
+            font-size: 20px;
+            color: #34495e;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .nav {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .nav a {
+            margin: 0 15px;
+            color: #2c3e50;
+            text-decoration: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="multicolor-title">
+            {% for letter in "DiamondKidsWear" %}
+                <span>{{ letter }}</span>
+            {% endfor %}
+        </div>
+        <h2>& Essentials</h2>
+    </div>
+
+    <div class="greeting">
+        Hey Chief!! Welcome Back, <strong>{{ username }}</strong>!
+    </div>
+
+    <div class="info-box">
+        <p><strong>🏪 Shop Address:</strong> [Enter your shop address here]</p>
+        <p><strong>🛍️ What We Offer:</strong></p>
+        <ul>
+            <li>👕 Boys & Girls Clothing (0–12 years)</li>
+            <li>🍼 Baby Care Essentials – Diapers, Bottles, Teething Toys</li>
+            <li>🎁 Gift Sets & Accessories</li>
+            <li>🧼 Sanitary and Infant Hygiene Products</li>
+        </ul>
+    </div>
+
+    <div class="nav">
+        <a href="{{ url_for('current_standing') }}">📊 Current Standing</a>
+        <a href="{{ url_for('dashboard') }}">📦 Inventory</a>
+        <a href="{{ url_for('logout') }}">🚪 Logout</a>
+    </div>
+</body>
+</html>
