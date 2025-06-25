@@ -24,7 +24,6 @@
             padding: 0 3px;
         }
 
-        /* Colored letters for DiamondKidsWear */
         .multicolor-title span:nth-child(1) { color: #e74c3c; }
         .multicolor-title span:nth-child(2) { color: #9b59b6; }
         .multicolor-title span:nth-child(3) { color: #3498db; }
@@ -35,7 +34,7 @@
         .multicolor-title span:nth-child(8) { color: #e67e22; }
         .multicolor-title span:nth-child(9) { color: #2980b9; }
         .multicolor-title span:nth-child(10) { color: #8e44ad; }
-        .multicolor-title span:nth-child(n+11) { color: #2c3e50; } /* fallback for extra letters */
+        .multicolor-title span:nth-child(n+11) { color: #2c3e50; }
 
         h2 {
             text-align: center;
@@ -161,6 +160,19 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Auto logout after 3 minutes of inactivity
+        let logoutTimer;
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => {
+                window.location.href = "{{ url_for('logout') }}";
+            }, 3 * 60 * 1000); // 3 minutes in milliseconds
+        }
+
+        window.onload = resetLogoutTimer;
+        document.onmousemove = resetLogoutTimer;
+        document.onkeypress = resetLogoutTimer;
     </script>
 </body>
 </html>

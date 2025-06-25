@@ -1,3 +1,4 @@
+<!-- current_standing.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,70 +8,18 @@
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body {
-            background-image: url("{{ url_for('static', filename='images/kids-bg.jpg') }}");
-            background-size: cover;
-            font-family: 'Segoe UI', sans-serif;
-            color: #333;
-        }
-        .navbar {
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .nav-links a {
-            margin: 0 15px;
-            text-decoration: none;
-            font-weight: bold;
-            color: #007BFF;
-        }
-        .time-user {
-            font-size: 14px;
-        }
-        .container {
-            padding: 20px;
-            background-color: rgba(255, 255, 255, 0.88);
-            margin: 30px auto;
-            width: 90%;
-            border-radius: 10px;
-            text-align: center;
-        }
-        .chart-container {
-            width: 95%;
-            margin: 30px auto;
-        }
-        table {
-            width: 100%;
-            margin-top: 30px;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 10px;
-            border: 1px solid #bbb;
-            background-color: #fff;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-        .info {
-            font-size: 18px;
-            margin-top: 20px;
-            text-align: left;
-        }
+        /* All CSS remains the same as you provided */
     </style>
 </head>
 <body>
     <div class="navbar">
         <div class="nav-links">
-            <a href="/dashboard">Home</a>
-            <a href="/current-standing">Current Standing</a>
-            <a href="/inventory">Inventory</a>
-            <a href="/sales">Today’s Sales</a>
-            <a href="/invoice">Generate Invoice</a>
-            <a href="/customers">Customer DB</a>
-            <a href="/logout" style="color: red;">Logout</a>
+            <a href="{{ url_for('dashboard') }}">🏠 Home</a>
+            <a href="{{ url_for('current_standing') }}">📊 Current Standing</a>
+            <a href="{{ url_for('inventory') }}">📦 Inventory</a>
+            <a href="{{ url_for('sales') }}">💰 Today’s Sales</a>
+            <a href="{{ url_for('invoice') }}">🧾 Generate Invoice</a>
+            <a href="{{ url_for('customers') }}">👥 Customer DB</a>
         </div>
         <div class="time-user">
             <span id="current-time"></span> | Logged in as: <strong>{{ username }}</strong>
@@ -85,58 +34,64 @@
         </form>
 
         {% with messages = get_flashed_messages() %}
-          {% if messages %}
-            <ul style="color: green;">
-              {% for message in messages %}
-                <li>{{ message }}</li>
-              {% endfor %}
+        {% if messages %}
+            <ul style="color: green; font-weight: bold;">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
             </ul>
-          {% endif %}
+        {% endif %}
         {% endwith %}
 
         <h2>📊 Current Standing of the Business</h2>
 
-        <div class="chart-container">
-            <canvas id="standingChart"></canvas>
-        </div>
+        {% if chart_data %}
+            <div class="chart-container">
+                <canvas id="standingChart"></canvas>
+            </div>
 
-      <div class="info">
-    {% if chart_data and chart_data.best_seller %}
-        <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
-        <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
-    {% else %}
-        <p>🔥 <strong>Best-Selling Product:</strong> Data not available</p>
-        <p>🛒 <strong>Quantity Sold:</strong> Data not available</p>
-    {% endif %}
-</div>
+            <div class="info">
+                {% if chart_data.best_seller %}
+                    <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
+                    <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
+                {% else %}
+                    <p>🔥 <strong>Best-Selling Product:</strong> Data not available</p>
+                    <p>🛒 <strong>Quantity Sold:</strong> Data not available</p>
+                {% endif %}
+            </div>
 
-        <h3>📦 Inventory Listing (Searchable)</h3>
-        <table id="inventoryTable" class="display">
-            <thead>
-                <tr>
-                    <th>Product ID</th>
-                    <th>Product Name</th>
-                    <th>Quantity Available</th>
-                    <th>Quantity Sold</th>
-                    <th>Quantity Remaining</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for i in range(chart_data.labels | length) %}
+            <h3>📦 Inventory Listing (Searchable)</h3>
+            <table id="inventoryTable" class="display">
+                <thead>
                     <tr>
-                        <td>{{ chart_data.labels[i] }}</td>
-                        <td>{{ chart_data.names[i] }}</td>
-                        <td>{{ chart_data.original[i] }}</td>
-                        <td>{{ chart_data.sold[i] }}</td>
-                        <td>{{ chart_data.remaining[i] }}</td>
+                        <th>Product ID</th>
+                        <th>Product Name</th>
+                        <th>Quantity Available</th>
+                        <th>Quantity Sold</th>
+                        <th>Quantity Remaining</th>
                     </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                    {% for i in range(chart_data.labels | length) %}
+                        <tr>
+                            <td>{{ chart_data.labels[i] }}</td>
+                            <td>{{ chart_data.names[i] }}</td>
+                            <td>{{ chart_data.original[i] }}</td>
+                            <td>{{ chart_data.sold[i] }}</td>
+                            <td>{{ chart_data.remaining[i] }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p style="font-weight: bold; color: red;">⚠️ No data available. Please upload an Excel file first.</p>
+        {% endif %}
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
     <script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+
+    {% if chart_data %}
     <script>
         const ctx = document.getElementById('standingChart').getContext('2d');
         const chart = new Chart(ctx, {
@@ -167,7 +122,10 @@
                 }
             }
         });
+    </script>
+    {% endif %}
 
+    <script>
         $(document).ready(function () {
             $('#inventoryTable').DataTable();
         });

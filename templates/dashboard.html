@@ -196,6 +196,19 @@
         }
         setInterval(updateTime, 1000);
         updateTime();
+
+        // Auto logout after 3 minutes of inactivity
+        let logoutTimer;
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => {
+                window.location.href = "{{ url_for('logout') }}";
+            }, 3 * 60 * 1000);
+        }
+
+        window.onload = resetLogoutTimer;
+        document.onmousemove = resetLogoutTimer;
+        document.onkeypress = resetLogoutTimer;
     </script>
 </body>
 </html>
