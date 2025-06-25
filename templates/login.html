@@ -107,9 +107,9 @@
             Welcome To Diamond Kids Wear<br>
             Please login to access the Key Data of your Business
         </div>
-        <form method="POST" action="{{ url_for('login') }}">
-            <input type="text" name="username" placeholder="Username" required><br>
-            <input type="password" name="password" placeholder="Password" required><br>
+        <form action="{{ url_for('do_login') }}" method="POST">
+            <input type="text" name="username" placeholder="Enter Username" required>
+            <input type="password" name="password" placeholder="Enter Password" required>
             <button type="submit">Login</button>
         </form>
         {% if error %}
