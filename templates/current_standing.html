@@ -70,6 +70,7 @@
             <a href="/sales">Today’s Sales</a>
             <a href="/invoice">Generate Invoice</a>
             <a href="/customers">Customer DB</a>
+            <a href="/logout" style="color: red;">Logout</a>
         </div>
         <div class="time-user">
             <span id="current-time"></span> | Logged in as: <strong>{{ username }}</strong>
@@ -77,6 +78,22 @@
     </div>
 
     <div class="container">
+        <h2>📤 Upload Excel File</h2>
+        <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data">
+            <input type="file" name="file" accept=".xlsx" required>
+            <button type="submit">Upload</button>
+        </form>
+
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <ul style="color: green;">
+              {% for message in messages %}
+                <li>{{ message }}</li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% endwith %}
+
         <h2>📊 Current Standing of the Business</h2>
 
         <div class="chart-container">

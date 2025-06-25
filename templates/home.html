@@ -24,6 +24,7 @@
             padding: 0 3px;
         }
 
+        /* Colored letters for DiamondKidsWear */
         .multicolor-title span:nth-child(1) { color: #e74c3c; }
         .multicolor-title span:nth-child(2) { color: #9b59b6; }
         .multicolor-title span:nth-child(3) { color: #3498db; }
@@ -34,12 +35,20 @@
         .multicolor-title span:nth-child(8) { color: #e67e22; }
         .multicolor-title span:nth-child(9) { color: #2980b9; }
         .multicolor-title span:nth-child(10) { color: #8e44ad; }
+        .multicolor-title span:nth-child(n+11) { color: #2c3e50; } /* fallback for extra letters */
 
         h2 {
             text-align: center;
             margin-top: 10px;
             font-size: 24px;
             color: #2c3e50;
+        }
+
+        .greeting {
+            font-size: 20px;
+            color: #34495e;
+            text-align: center;
+            margin-top: 25px;
         }
 
         .info-box {
@@ -51,21 +60,20 @@
             box-shadow: 0 4px 8px rgba(0,0,0,0.2);
         }
 
-        .info-box p {
+        .info-box p,
+        .info-box ul {
             font-size: 18px;
             margin-bottom: 15px;
+            text-align: left;
         }
 
-        .greeting {
-            font-size: 20px;
-            color: #34495e;
-            text-align: center;
-            margin-top: 20px;
+        .info-box ul {
+            padding-left: 20px;
         }
 
         .nav {
             text-align: center;
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         .nav a {
@@ -73,6 +81,41 @@
             color: #2c3e50;
             text-decoration: none;
             font-weight: bold;
+            font-size: 18px;
+            transition: color 0.2s ease;
+        }
+
+        .nav a:hover {
+            color: #000;
+            text-decoration: underline;
+        }
+
+        .footer-time {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        @media (max-width: 600px) {
+            .multicolor-title span {
+                font-size: 28px;
+            }
+            h2 {
+                font-size: 20px;
+            }
+            .greeting {
+                font-size: 18px;
+            }
+            .info-box {
+                padding: 15px;
+                font-size: 16px;
+            }
+            .nav a {
+                display: block;
+                margin: 10px 0;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
@@ -91,7 +134,7 @@
     </div>
 
     <div class="info-box">
-        <p><strong>🏪 Shop Address:</strong> [Enter your shop address here]</p>
+        <p><strong>🏪 Shop Address:</strong> SHOP NO 4, SHIV SHREE APT, K-VILLA, RABODI-THANE, 400601</p>
         <p><strong>🛍️ What We Offer:</strong></p>
         <ul>
             <li>👕 Boys & Girls Clothing (0–12 years)</li>
@@ -106,5 +149,18 @@
         <a href="{{ url_for('dashboard') }}">📦 Inventory</a>
         <a href="{{ url_for('logout') }}">🚪 Logout</a>
     </div>
+
+    <div class="footer-time">
+        Current Time: <span id="current-time"></span>
+    </div>
+
+    <script>
+        function updateTime() {
+            const now = new Date();
+            document.getElementById("current-time").textContent = now.toLocaleString();
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
 </body>
 </html>
