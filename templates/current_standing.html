@@ -100,10 +100,15 @@
             <canvas id="standingChart"></canvas>
         </div>
 
-        <div class="info">
-            <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
-            <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
-        </div>
+      <div class="info">
+    {% if chart_data and chart_data.best_seller %}
+        <p>🔥 <strong>Best-Selling Product:</strong> {{ chart_data.best_seller.product_id }}</p>
+        <p>🛒 <strong>Quantity Sold:</strong> {{ chart_data.best_seller.quantity_sold }}</p>
+    {% else %}
+        <p>🔥 <strong>Best-Selling Product:</strong> Data not available</p>
+        <p>🛒 <strong>Quantity Sold:</strong> Data not available</p>
+    {% endif %}
+</div>
 
         <h3>📦 Inventory Listing (Searchable)</h3>
         <table id="inventoryTable" class="display">
