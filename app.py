@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 import pandas as pd
 import os
 from io import BytesIO
-from datetime import datetime
+from flask import send_file
+from reportlab.lib.pagesizes import A4
+from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 app.debug = True
@@ -13,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 # Dummy login system
-users = {'admin': 'password', 'staff': '1234'}
+users = {'Taha': '010923', 'Mustafa': 'Musa123'}
 
 # Dummy product data (to be dynamically loaded later)
 product_price_dict = {}
@@ -82,8 +84,73 @@ def invoice():
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
-    if 'user' not in session:
-        return redirect(url_for('login'))
+    customer_name = request.form['customer_name']
+    customer_number = request.form.get('customer_number', '')
+    discount = float(request.form.get('discount', 0))
+    payment_type = request.form['payment_type']
+
+    product_ids = request.form.getlist('product_ids[]')
+    product_prices = request.form.getlist('product_prices[]')
+
+    # Compute total
+    total = 0
+    products = []
+    for pid, price in zip(product_ids, product_prices):
+        p = {
+            'id': pid,
+            'price': float(price)
+        }
+        products.append(p)
+        total += p['price']
+
+    discounted_total = total - (total * discount / 100)
+
+    # Generate PDF
+    buffer = BytesIO()
+    p = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    y = height - 50
+    p.setFont("Helvetica-Bold", 18)
+    p.drawCentredString(width / 2, y, "DIAMOND KIDS WEAR & ESSENTIALS")
+
+    y -= 30
+    p.setFont("Helvetica", 12)
+    p.drawString(50, y, f"Customer Name: {customer_name}")
+    y -= 20
+    p.drawString(50, y, f"Customer Phone: {customer_number}")
+    y -= 30
+
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(50, y, "Products:")
+    y -= 20
+
+    p.setFont("Helvetica", 12)
+    for prod in products:
+        p.drawString(60, y, f"Product ID: {prod['id']} - Price: ₹{prod['price']:.2f}")
+        y -= 20
+
+    y -= 10
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(50, y, f"Discount: {discount}%")
+    y -= 20
+    p.drawString(50, y, f"TOTAL: ₹{discounted_total:.2f}")
+
+    y -= 30
+    p.drawString(50, y, f"Payment Method: {payment_type}")
+
+    p.showPage()
+    p.save()
+
+    buffer.seek(0)
+
+    # Send PDF as download
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"Invoice_{customer_name.replace(' ','_')}.pdf",
+        mimetype='application/pdf'
+    )
 
     try:
         customer_name = request.form.get('customer_name')
