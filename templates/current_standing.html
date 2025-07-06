@@ -17,39 +17,45 @@
     <p style="color: green; font-weight: bold;">✅ File uploaded successfully!</p>
 {% endif %}
 
-<!-- Search Bar -->
-<input type="text" id="searchInput" placeholder="Search by Product ID..." onkeyup="searchTable()" style="padding: 8px; width: 300px; margin-bottom: 20px;">
+<!-- Check if products list exists and has data -->
+{% if products and products|length > 0 %}
+    <!-- Search Bar -->
+    <input type="text" id="searchInput" placeholder="Search by Product ID..." onkeyup="searchTable()" style="padding: 8px; width: 300px; margin-bottom: 20px;">
 
-<!-- Product Table -->
-<table id="productTable" border="1" cellpadding="10" cellspacing="0">
-    <thead style="background-color: #e0e0e0;">
-        <tr>
-            <th>Product ID</th>
-            <th>Product Name</th>
-            <th>Quantity Sold</th>
-            <th>Remaining Quantity</th>
-            <th>Cost Price</th>
-            <th>Selling Price</th>
-            <th>Total Sales</th>
-            <th>Profit</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for product in products %}
-        <tr>
-            <td>{{ product.id }}</td>
-            <td>{{ product.name }}</td>
-            <td>{{ product.qty_sold }}</td>
-            <td>{{ product.qty_remaining }}</td>
-            <td>{{ product.cost_price }}</td>
-            <td>{{ product.selling_price }}</td>
-            <td>{{ product.total_sales }}</td>
-            <td>{{ product.profit }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+    <!-- Product Table -->
+    <table id="productTable" border="1" cellpadding="10" cellspacing="0">
+        <thead style="background-color: #e0e0e0;">
+            <tr>
+                <th>Product ID</th>
+                <th>Product Name</th>
+                <th>Quantity Sold</th>
+                <th>Remaining Quantity</th>
+                <th>Cost Price</th>
+                <th>Selling Price</th>
+                <th>Total Sales</th>
+                <th>Profit</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for product in products %}
+            <tr>
+                <td>{{ product.id }}</td>
+                <td>{{ product.name }}</td>
+                <td>{{ product.qty_sold }}</td>
+                <td>{{ product.qty_remaining }}</td>
+                <td>{{ product.cost_price }}</td>
+                <td>{{ product.selling_price }}</td>
+                <td>{{ product.total_sales }}</td>
+                <td>{{ product.profit }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p style="color: red;">No product data available. Please upload a valid Excel file to view current standing.</p>
+{% endif %}
 
+<!-- Search Script -->
 <script>
 function searchTable() {
     const input = document.getElementById("searchInput");
@@ -58,7 +64,7 @@ function searchTable() {
     const tr = table.getElementsByTagName("tr");
 
     for (let i = 1; i < tr.length; i++) {
-        const td = tr[i].getElementsByTagName("td")[0];  // Search by Product ID
+        const td = tr[i].getElementsByTagName("td")[0]; // Search by Product ID
         if (td) {
             const txtValue = td.textContent || td.innerText;
             tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
@@ -66,5 +72,4 @@ function searchTable() {
     }
 }
 </script>
-
 {% endblock %}

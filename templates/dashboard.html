@@ -8,24 +8,24 @@
         body {
             margin: 0;
             font-family: 'Segoe UI', sans-serif;
-            background-color: #f8f9fa;
+            background-color: #f4f4f4;
+            color: #333;
         }
 
         .navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #fff;
-            padding: 14px 24px;
-            border-bottom: 1px solid #ddd;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            background-color: #f5f5f5;
+            padding: 12px 24px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
         }
 
         .nav-links a {
             margin: 0 12px;
             text-decoration: none;
             font-weight: bold;
-            color: #333;
+            color: #444;
         }
 
         .nav-links a:hover {
@@ -37,35 +37,78 @@
             color: white;
             padding: 8px 16px;
             border: none;
-            border-radius: 5px;
+            border-radius: 6px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: background-color 0.3s;
         }
 
         .logout-btn:hover {
             background-color: #c82333;
         }
 
-        .timestamp {
-            font-size: 14px;
-            font-weight: bold;
-        }
-
         .container {
-            padding: 30px;
+            padding: 40px;
+            max-width: 1000px;
+            margin: auto;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-top: 40px;
         }
 
         h2 {
-            color: #444;
+            margin-top: 0;
+            font-size: 24px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table th, table td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 18px;
+            border: none;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .button:hover {
+            background-color: #0056b3;
+        }
+
+        .timestamp {
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="number"], select {
+            padding: 8px;
+            width: 250px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
         }
     </style>
-    {% block head_extra %}{% endblock %}
     <script>
         function updateTime() {
             const now = new Date();
             const timeString = now.toLocaleTimeString();
-            document.getElementById('time').textContent = timeString;
+            const timeElem = document.getElementById('time');
+            if (timeElem) {
+                timeElem.textContent = timeString;
+            }
         }
         setInterval(updateTime, 1000);
         window.onload = updateTime;
@@ -86,9 +129,17 @@
     </div>
 
     <div class="container">
-        {% block content %}
-        <!-- Page-specific content goes here -->
-        {% endblock %}
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul style="color: red;">
+                    {% for message in messages %}
+                        <li>{{ message }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
     </div>
 </body>
 </html>

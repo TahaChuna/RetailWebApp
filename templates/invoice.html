@@ -12,7 +12,7 @@
     </div>
     <div style="margin-bottom: 15px;">
         <label><strong>Customer Mobile Number:</strong></label>
-        <input type="text" name="customer_number">
+        <input type="text" name="customer_number" pattern="[0-9]{10}" maxlength="10" placeholder="Optional">
     </div>
 
     <h3>➕ Add Products</h3>
@@ -32,6 +32,7 @@
     <div style="margin-top: 20px;">
         <label><strong>Payment Method:</strong></label>
         <select name="payment_type" required>
+            <option value="">-- Select --</option>
             <option value="Cash">Cash</option>
             <option value="UPI">UPI</option>
             <option value="Debit Card">Debit Card</option>
@@ -47,7 +48,7 @@
 </form>
 
 <script>
-let productPrices = {{ product_price_dict | tojson }};
+let productPrices = {{ product_price_dict | tojson | safe }};
 
 function addProduct() {
     const productList = document.getElementById('productList');

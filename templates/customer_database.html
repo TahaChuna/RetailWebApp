@@ -5,8 +5,9 @@
 {% block content %}
 <h2>📇 Customer Database</h2>
 
-<table>
-    <thead>
+{% if customer_data and customer_data|length > 0 %}
+<table border="1" cellpadding="10" cellspacing="0">
+    <thead style="background-color: #e0e0e0;">
         <tr>
             <th>Customer Name</th>
             <th>Mobile Number</th>
@@ -17,14 +18,17 @@
         {% for customer in customer_data %}
         <tr>
             <td>{{ customer.name }}</td>
-            <td>{{ customer.mobile }}</td>
+            <td>{{ customer.mobile or "N/A" }}</td>
             <td>{{ customer.bills | join(' - ') }}</td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
+{% else %}
+<p style="color: gray;">No customer data available.</p>
+{% endif %}
 
-<form method="POST" action="{{ url_for('export_customers') }}">
+<form method="POST" action="{{ url_for('export_customers') }}" style="margin-top: 20px;">
     <button type="submit" class="button">Export to Excel</button>
 </form>
 {% endblock %}
