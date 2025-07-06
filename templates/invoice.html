@@ -5,7 +5,7 @@
 {% block content %}
 <h2>🧾 Generate Invoice</h2>
 
-<form id="invoiceForm" method="POST" action="{{ url_for('generate_invoice') }}">
+<form id="invoiceForm" method="POST" action="{{ url_for('generate_invoice') }}" target="_blank">
     <div style="margin-bottom: 15px;">
         <label><strong>Customer Name<span style="color: red;">*</span>:</strong></label>
         <input type="text" name="customer_name" required>
@@ -19,7 +19,7 @@
     <div id="productList">
         <div class="product-entry">
             <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
-            <input type="text" name="product_prices[]" placeholder="Price" readonly>
+            <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()">
         </div>
     </div>
     <button type="button" onclick="addProduct()">Add Another Product</button>
@@ -56,7 +56,7 @@ function addProduct() {
     entry.className = 'product-entry';
     entry.innerHTML = `
         <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
-        <input type="text" name="product_prices[]" placeholder="Price" readonly>
+        <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()">
     `;
     productList.appendChild(entry);
 }
