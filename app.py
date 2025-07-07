@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file, flash
 import pandas as pd
 import os
+from flask import request, send_file
 from io import BytesIO
 from datetime import datetime
 
@@ -98,85 +99,114 @@ def invoice():
     return render_template('invoice.html', product_price_dict=product_price_dict)
 
 @app.route('/generate_invoice', methods=['POST'])
+# Bill number generator function
+def get_next_bill_number():
+    filename = 'last_bill_number.txt'
+    if not os.path.exists(filename):
+        with open(filename, 'w') as f:
+            f.write('1')
+        return 1
+    with open(filename, 'r') as f:
+        number = int(f.read().strip())
+    with open(filename, 'w') as f:
+        f.write(str(number + 1))
+    return number
+
 def generate_invoice():
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.platypus import Table, TableStyle
+    from io import BytesIO
+    from datetime import datetime
+
     customer_name = request.form.get('customer_name')
     customer_number = request.form.get('customer_number')
     product_ids = request.form.getlist('product_ids[]')
     product_prices = request.form.getlist('product_prices[]')
     discount_percentage = float(request.form.get('discount') or 0)
 
-    bill_number = get_next_bill_number()
+    # Prepare product data
+    products = []
+    for pid, price in zip(product_ids, product_prices):
+        products.append({"id": pid, "price": price})
 
-    # Calculate totals
-    prices = [float(p) for p in product_prices]
-    subtotal = sum(prices)
-    discount_amount = subtotal * discount_percentage / 100
-    total = subtotal - discount_amount
+    bill_number = get_next_bill_number()
 
     # Create PDF
     buffer = BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
+    c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    # Logo (if you have a logo.png in your project)
-    # pdf.drawImage("logo.png", 40, height - 100, width=100, preserveAspectRatio=True, mask='auto')
+    # Header
+    c.setFont("Helvetica-Bold", 28)
+    c.setFillColor(colors.HexColor("#333333"))
+    c.drawString(40, height - 70, "INVOICE")
 
-    # Store name
-    pdf.setFont("Helvetica-Bold", 20)
-    pdf.drawCentredString(width / 2, height - 60, "DIAMOND KIDS WEAR & ESSENTIALS")
+    c.setFont("Helvetica", 12)
+    c.drawString(40, height - 95, "Diamond Kids Wear & Essentials")
+    c.drawString(40, height - 110, "123 Main Street, City, Country")
+    c.drawString(40, height - 125, "Phone: +91-XXXXXXXXXX")
+    c.drawString(40, height - 140, f"Invoice #: {bill_number}")
+    c.drawString(40, height - 155, f"Date: {datetime.today().strftime('%d %b %Y')}")
 
-    # Invoice details
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(40, height - 90, f"Invoice #: {bill_number}")
-    pdf.drawString(300, height - 90, f"Date: {datetime.now().strftime('%d-%m-%Y')}")
-
-    # Customer info
-    pdf.drawString(40, height - 120, f"Customer: {customer_name}")
+    # Customer details
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(350, height - 95, "Billed To:")
+    c.setFont("Helvetica", 12)
+    c.drawString(350, height - 110, customer_name)
     if customer_number:
-        pdf.drawString(300, height - 120, f"Phone: {customer_number}")
+        c.drawString(350, height - 125, f"Mobile: {customer_number}")
 
-    # Table headers and data
-    data = [["Sr", "Product ID", "Price (₹)"]]
-    for i, (pid, price) in enumerate(zip(product_ids, product_prices), start=1):
-        data.append([str(i), pid, price])
+    # Table data
+    data = [["#", "Description", "Quantity", "Unit Price", "Amount"]]
+    subtotal = 0
+    for i, prod in enumerate(products, start=1):
+        qty = 1
+        amount = float(prod["price"])
+        subtotal += amount
+        data.append([str(i), prod["id"], str(qty), f"₹ {prod['price']}", f"₹ {prod['price']}"])
 
-    table = Table(data, colWidths=[40, 250, 100])
-    table.setStyle(TableStyle([
-        ('BACKGROUND', (0,0), (-1,0), colors.grey),
-        ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
-        ('ALIGN',(0,0),(-1,-1),'CENTER'),
-        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
-        ('FONTSIZE', (0,0), (-1,-1), 10),
-        ('BOTTOMPADDING', (0,0), (-1,0), 8),
-        ('BACKGROUND',(0,1),(-1,-1),colors.beige),
-        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
-    ]))
-    table.wrapOn(pdf, width, height)
-    table_height = 200 + 20 * len(data)
-    table.drawOn(pdf, 40, height - table_height)
+    discount_amount = subtotal * (discount_percentage / 100)
+    total_due = subtotal - discount_amount
 
-    # Summary
-    summary_y = height - table_height - 40
-    pdf.setFont("Helvetica-Bold", 12)
-    pdf.drawString(300, summary_y, f"Subtotal: ₹{subtotal:.2f}")
-    pdf.drawString(300, summary_y - 20, f"Discount ({discount_percentage}%): -₹{discount_amount:.2f}")
-    pdf.drawString(300, summary_y - 40, f"Total Amount: ₹{total:.2f}")
+    # Draw table
+    table = Table(data, colWidths=[30, 220, 70, 80, 80])
+    style = TableStyle([
+        ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
+        ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
+        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+        ("ALIGN", (2,1), (-1,-1), "RIGHT"),
+        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+    ])
+    table.setStyle(style)
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 40, height - 400)
+
+    # Totals Section
+    y = height - 420 - (20 * len(products))
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(350, y, f"Subtotal: ₹ {subtotal:.2f}")
+    y -= 20
+    c.drawString(350, y, f"Discount ({discount_percentage}%): ₹ {discount_amount:.2f}")
+    y -= 20
+    c.drawString(350, y, f"Total Due: ₹ {total_due:.2f}")
 
     # Footer
-    pdf.setFont("Helvetica-Oblique", 10)
-    pdf.drawCentredString(width / 2, 30, "Thank you for shopping with us!")
+    c.setFont("Helvetica", 10)
+    c.setFillColor(colors.grey)
+    c.drawString(40, 40, "Thank you for shopping with us!")
 
-    pdf.showPage()
-    pdf.save()
-
+    c.save()
     buffer.seek(0)
+
     filename = f"Invoice_{bill_number}.pdf"
 
     return send_file(
         buffer,
         as_attachment=True,
         download_name=filename,
-        mimetype='application/pdf'
+        mimetype="application/pdf"
     )
 @app.route('/customer_database')
 def customer_database():
