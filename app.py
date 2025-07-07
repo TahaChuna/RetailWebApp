@@ -1,26 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session, send_file, flash
 import pandas as pd
 import os
-from flask import request, send_file
 from io import BytesIO
 from datetime import datetime
-
 from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 from reportlab.platypus import Table, TableStyle
-
-def get_next_bill_number():
-    filename = 'last_bill_number.txt'
-    if not os.path.exists(filename):
-        with open(filename, 'w') as f:
-            f.write('1')
-        return 1
-    with open(filename, 'r') as f:
-        number = int(f.read().strip())
-    with open(filename, 'w') as f:
-        f.write(str(number + 1))
-    return number
 
 app = Flask(__name__)
 app.debug = True
@@ -35,6 +21,19 @@ users = {'Taha': '010923', 'Mustafa': 'Musa123'}
 
 # Dummy product data (to be dynamically loaded later)
 product_price_dict = {}
+
+# Bill number generator
+def get_next_bill_number():
+    filename = 'last_bill_number.txt'
+    if not os.path.exists(filename):
+        with open(filename, 'w') as f:
+            f.write('1')
+        return 1
+    with open(filename, 'r') as f:
+        number = int(f.read().strip())
+    with open(filename, 'w') as f:
+        f.write(str(number + 1))
+    return number
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -92,42 +91,14 @@ def current_standing():
 
     return render_template('current_standing.html', upload_success=upload_success, products=products)
 
-from flask import Flask, render_template, request, send_file
-import os
-
-app = Flask(__name__)
-
-# Dummy product price dict to avoid error
-product_price_dict = {}
-
-# Bill number generator
-def get_next_bill_number():
-    filename = 'last_bill_number.txt'
-    if not os.path.exists(filename):
-        with open(filename, 'w') as f:
-            f.write('1')
-        return 1
-    with open(filename, 'r') as f:
-        number = int(f.read().strip())
-    with open(filename, 'w') as f:
-        f.write(str(number + 1))
-    return number
-
-# Route to serve invoice form page
 @app.route('/invoice', methods=['GET'])
 def invoice():
+    if 'user' not in session:
+        return redirect(url_for('login'))
     return render_template("invoice.html", product_price_dict=product_price_dict)
 
-# Route to handle invoice generation
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
-    from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import A4
-    from reportlab.lib import colors
-    from reportlab.platypus import Table, TableStyle
-    from io import BytesIO
-    from datetime import datetime
-
     customer_name = request.form.get('customer_name')
     customer_number = request.form.get('customer_number')
     product_ids = request.form.getlist('product_ids[]')
@@ -210,12 +181,12 @@ def generate_invoice():
         download_name=filename,
         mimetype="application/pdf"
     )
+
 @app.route('/customer_database')
 def customer_database():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    # Dummy customer data for now
     customer_data = [
         {'name': 'Amit', 'mobile': '9876543210', 'bills': ['INV001', 'INV004']},
         {'name': 'Rita', 'mobile': '9123456780', 'bills': ['INV002']}
@@ -227,7 +198,6 @@ def export_customers():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    # Dummy data
     customer_data = [
         {'Name': 'Amit', 'Mobile': '9876543210', 'Bills': 'INV001, INV004'},
         {'Name': 'Rita', 'Mobile': '9123456780', 'Bills': 'INV002'},
