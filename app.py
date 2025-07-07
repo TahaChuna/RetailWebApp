@@ -92,11 +92,13 @@ def current_standing():
 
     return render_template('current_standing.html', upload_success=upload_success, products=products)
 
-@app.route('/invoice', methods=['GET'])
-def invoice():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template('invoice.html', product_price_dict=product_price_dict)
+from flask import Flask, render_template, request, send_file
+import os
+
+app = Flask(__name__)
+
+# Dummy product price dict to avoid error
+product_price_dict = {}
 
 # Bill number generator
 def get_next_bill_number():
@@ -111,7 +113,12 @@ def get_next_bill_number():
         f.write(str(number + 1))
     return number
 
-# Route for generating invoice
+# Route to serve invoice form page
+@app.route('/invoice', methods=['GET'])
+def invoice():
+    return render_template("invoice.html", product_price_dict=product_price_dict)
+
+# Route to handle invoice generation
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     from reportlab.pdfgen import canvas
@@ -127,14 +134,12 @@ def generate_invoice():
     product_prices = request.form.getlist('product_prices[]')
     discount_percentage = float(request.form.get('discount') or 0)
 
-    # Prepare product data
     products = []
     for pid, price in zip(product_ids, product_prices):
         products.append({"id": pid, "price": price})
 
     bill_number = get_next_bill_number()
 
-    # Create PDF
     buffer = BytesIO()
     c = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
@@ -159,7 +164,6 @@ def generate_invoice():
     if customer_number:
         c.drawString(350, height - 125, f"Mobile: {customer_number}")
 
-    # Table data
     data = [["#", "Description", "Quantity", "Unit Price", "Amount"]]
     subtotal = 0
     for i, prod in enumerate(products, start=1):
@@ -171,7 +175,6 @@ def generate_invoice():
     discount_amount = subtotal * (discount_percentage / 100)
     total_due = subtotal - discount_amount
 
-    # Draw table
     table = Table(data, colWidths=[30, 220, 70, 80, 80])
     style = TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
@@ -184,7 +187,6 @@ def generate_invoice():
     table.wrapOn(c, width, height)
     table.drawOn(c, 40, height - 400)
 
-    # Totals Section
     y = height - 420 - (20 * len(products))
     c.setFont("Helvetica-Bold", 12)
     c.drawString(350, y, f"Subtotal: ₹ {subtotal:.2f}")
@@ -193,7 +195,6 @@ def generate_invoice():
     y -= 20
     c.drawString(350, y, f"Total Due: ₹ {total_due:.2f}")
 
-    # Footer
     c.setFont("Helvetica", 10)
     c.setFillColor(colors.grey)
     c.drawString(40, 40, "Thank you for shopping with us!")
