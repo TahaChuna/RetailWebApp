@@ -98,8 +98,7 @@ def invoice():
         return redirect(url_for('login'))
     return render_template('invoice.html', product_price_dict=product_price_dict)
 
-@app.route('/generate_invoice', methods=['POST'])
-# Bill number generator function
+# Bill number generator
 def get_next_bill_number():
     filename = 'last_bill_number.txt'
     if not os.path.exists(filename):
@@ -112,6 +111,8 @@ def get_next_bill_number():
         f.write(str(number + 1))
     return number
 
+# Route for generating invoice
+@app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import A4
