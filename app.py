@@ -99,77 +99,97 @@ def invoice():
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.pagesizes import A4
+    from reportlab.lib import colors
+    from reportlab.platypus import Table, TableStyle, Paragraph, SimpleDocTemplate
+    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from io import BytesIO
+    from datetime import datetime
+
+    # Get form data
     customer_name = request.form.get('customer_name')
     customer_number = request.form.get('customer_number')
     product_ids = request.form.getlist('product_ids[]')
     product_prices = request.form.getlist('product_prices[]')
     discount_percentage = float(request.form.get('discount') or 0)
 
+    # Build product data
     products = []
-    for pid, price in zip(product_ids, product_prices):
-        products.append({"id": pid, "price": price})
-
-    bill_number = get_next_bill_number()
-
-    buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
-
-    # Header
-    c.setFont("Helvetica-Bold", 28)
-    c.setFillColor(colors.HexColor("#333333"))
-    c.drawString(40, height - 70, "INVOICE")
-
-    c.setFont("Helvetica", 12)
-    c.drawString(40, height - 95, "Diamond Kids Wear & Essentials")
-    c.drawString(40, height - 110, "123 Main Street, City, Country")
-    c.drawString(40, height - 125, "Phone: +91-XXXXXXXXXX")
-    c.drawString(40, height - 140, f"Invoice #: {bill_number}")
-    c.drawString(40, height - 155, f"Date: {datetime.today().strftime('%d %b %Y')}")
-
-    # Customer details
-    c.setFont("Helvetica-Bold", 12)
-    c.drawString(350, height - 95, "Billed To:")
-    c.setFont("Helvetica", 12)
-    c.drawString(350, height - 110, customer_name)
-    if customer_number:
-        c.drawString(350, height - 125, f"Mobile: {customer_number}")
-
-    data = [["#", "Description", "Quantity", "Unit Price", "Amount"]]
     subtotal = 0
-    for i, prod in enumerate(products, start=1):
+    for pid, price in zip(product_ids, product_prices):
         qty = 1
-        amount = float(prod["price"])
+        amount = float(price)
         subtotal += amount
-        data.append([str(i), prod["id"], str(qty), f"₹ {prod['price']}", f"₹ {prod['price']}"])
+        products.append([pid, qty, f"₹ {price}", f"₹ {price}"])
 
     discount_amount = subtotal * (discount_percentage / 100)
     total_due = subtotal - discount_amount
 
-    table = Table(data, colWidths=[30, 220, 70, 80, 80])
+    # Create PDF buffer
+    buffer = BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
+    width, height = A4
+
+    # ===== HEADER =====
+    c.setFont("Helvetica-Bold", 40)
+    c.setFillColor(colors.HexColor("#000000"))
+    c.drawString(40, height - 60, "INVOICE")
+
+    # Customer name below INVOICE
+    c.setFont("Helvetica", 14)
+    c.setFillColor(colors.black)
+    c.drawString(40, height - 90, f"Customer: {customer_name} | Mobile: {customer_number}")
+
+    # Issued By on right
+    c.setFont("Helvetica-Bold", 10)
+    c.drawRightString(width - 40, height - 60, "ISSUED BY:")
+    c.setFont("Helvetica", 10)
+    c.drawRightString(width - 40, height - 75, "DIAMOND KIDS WEAR AND ESSENTIALS")
+    c.drawRightString(width - 40, height - 90, "THANE - 400601")
+    c.drawRightString(width - 40, height - 105, "Mobile No: 9920752179")
+
+    # Invoice details
+    bill_number = get_next_bill_number()
+    c.setFont("Helvetica", 10)
+    c.drawString(40, height - 120, f"Invoice No: {bill_number}")
+    c.drawString(200, height - 120, f"Date: {datetime.today().strftime('%d %b %Y')}")
+
+    # ===== TABLE =====
+    data = [["POS", "DESCRIPTION", "QTY", "PRICE", "AMOUNT"]]
+    for i, row in enumerate(products, 1):
+        data.append([str(i), row[0], str(row[1]), row[2], row[3]])
+
+    table = Table(data, colWidths=[30, 200, 50, 80, 80])
     style = TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
         ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
         ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-        ("ALIGN", (2,1), (-1,-1), "RIGHT"),
+        ("ALIGN", (2,1), (-1,-1), "CENTER"),
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
+        ("FONTSIZE", (0,0), (-1,-1), 10),
     ])
     table.setStyle(style)
+
     table.wrapOn(c, width, height)
-    table.drawOn(c, 40, height - 400)
+    table_height = 20 * len(data)
+    table.drawOn(c, 40, height - 150 - table_height)
 
-    y = height - 420 - (20 * len(products))
+    # ===== TOTALS =====
+    y = height - 160 - table_height - 10
     c.setFont("Helvetica-Bold", 12)
-    c.drawString(350, y, f"Subtotal: ₹ {subtotal:.2f}")
-    y -= 20
-    c.drawString(350, y, f"Discount ({discount_percentage}%): ₹ {discount_amount:.2f}")
-    y -= 20
-    c.drawString(350, y, f"Total Due: ₹ {total_due:.2f}")
+    c.drawRightString(width - 40, y, f"Subtotal: ₹ {subtotal:.2f}")
+    y -= 15
+    c.drawRightString(width - 40, y, f"Discount ({discount_percentage}%): ₹ {discount_amount:.2f}")
+    y -= 15
+    c.drawRightString(width - 40, y, f"Total Amount to be Paid: ₹ {total_due:.2f}")
 
-    c.setFont("Helvetica", 10)
-    c.setFillColor(colors.grey)
-    c.drawString(40, 40, "Thank you for shopping with us!")
+    # ===== WATERMARK =====
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(colors.lightgrey)
+    c.drawCentredString(width/2, 60, "Thank you for shopping with DIAMOND KIDS WEAR! Adios!")
 
+    # Finish PDF
     c.save()
     buffer.seek(0)
 
