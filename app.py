@@ -2,9 +2,24 @@ from flask import Flask, render_template, request, redirect, url_for, session, s
 import pandas as pd
 import os
 from io import BytesIO
-from flask import send_file
-from reportlab.lib.pagesizes import A4
+from datetime import datetime
+
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import A4
+from reportlab.lib import colors
+from reportlab.platypus import Table, TableStyle
+
+def get_next_bill_number():
+    filename = 'last_bill_number.txt'
+    if not os.path.exists(filename):
+        with open(filename, 'w') as f:
+            f.write('1')
+        return 1
+    with open(filename, 'r') as f:
+        number = int(f.read().strip())
+    with open(filename, 'w') as f:
+        f.write(str(number + 1))
+    return number
 
 app = Flask(__name__)
 app.debug = True
@@ -84,98 +99,85 @@ def invoice():
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
-    customer_name = request.form['customer_name']
-    customer_number = request.form.get('customer_number', '')
-    discount = float(request.form.get('discount', 0))
-    payment_type = request.form['payment_type']
-
+    customer_name = request.form.get('customer_name')
+    customer_number = request.form.get('customer_number')
     product_ids = request.form.getlist('product_ids[]')
     product_prices = request.form.getlist('product_prices[]')
+    discount_percentage = float(request.form.get('discount') or 0)
 
-    # Compute total
-    total = 0
-    products = []
-    for pid, price in zip(product_ids, product_prices):
-        p = {
-            'id': pid,
-            'price': float(price)
-        }
-        products.append(p)
-        total += p['price']
+    bill_number = get_next_bill_number()
 
-    discounted_total = total - (total * discount / 100)
+    # Calculate totals
+    prices = [float(p) for p in product_prices]
+    subtotal = sum(prices)
+    discount_amount = subtotal * discount_percentage / 100
+    total = subtotal - discount_amount
 
-    # Generate PDF
+    # Create PDF
     buffer = BytesIO()
-    p = canvas.Canvas(buffer, pagesize=A4)
+    pdf = canvas.Canvas(buffer, pagesize=A4)
     width, height = A4
 
-    y = height - 50
-    p.setFont("Helvetica-Bold", 18)
-    p.drawCentredString(width / 2, y, "DIAMOND KIDS WEAR & ESSENTIALS")
+    # Logo (if you have a logo.png in your project)
+    # pdf.drawImage("logo.png", 40, height - 100, width=100, preserveAspectRatio=True, mask='auto')
 
-    y -= 30
-    p.setFont("Helvetica", 12)
-    p.drawString(50, y, f"Customer Name: {customer_name}")
-    y -= 20
-    p.drawString(50, y, f"Customer Phone: {customer_number}")
-    y -= 30
+    # Store name
+    pdf.setFont("Helvetica-Bold", 20)
+    pdf.drawCentredString(width / 2, height - 60, "DIAMOND KIDS WEAR & ESSENTIALS")
 
-    p.setFont("Helvetica-Bold", 14)
-    p.drawString(50, y, "Products:")
-    y -= 20
+    # Invoice details
+    pdf.setFont("Helvetica", 12)
+    pdf.drawString(40, height - 90, f"Invoice #: {bill_number}")
+    pdf.drawString(300, height - 90, f"Date: {datetime.now().strftime('%d-%m-%Y')}")
 
-    p.setFont("Helvetica", 12)
-    for prod in products:
-        p.drawString(60, y, f"Product ID: {prod['id']} - Price: ₹{prod['price']:.2f}")
-        y -= 20
+    # Customer info
+    pdf.drawString(40, height - 120, f"Customer: {customer_name}")
+    if customer_number:
+        pdf.drawString(300, height - 120, f"Phone: {customer_number}")
 
-    y -= 10
-    p.setFont("Helvetica-Bold", 12)
-    p.drawString(50, y, f"Discount: {discount}%")
-    y -= 20
-    p.drawString(50, y, f"TOTAL: ₹{discounted_total:.2f}")
+    # Table headers and data
+    data = [["Sr", "Product ID", "Price (₹)"]]
+    for i, (pid, price) in enumerate(zip(product_ids, product_prices), start=1):
+        data.append([str(i), pid, price])
 
-    y -= 30
-    p.drawString(50, y, f"Payment Method: {payment_type}")
+    table = Table(data, colWidths=[40, 250, 100])
+    table.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR',(0,0),(-1,0),colors.whitesmoke),
+        ('ALIGN',(0,0),(-1,-1),'CENTER'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 10),
+        ('BOTTOMPADDING', (0,0), (-1,0), 8),
+        ('BACKGROUND',(0,1),(-1,-1),colors.beige),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+    ]))
+    table.wrapOn(pdf, width, height)
+    table_height = 200 + 20 * len(data)
+    table.drawOn(pdf, 40, height - table_height)
 
-    p.showPage()
-    p.save()
+    # Summary
+    summary_y = height - table_height - 40
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawString(300, summary_y, f"Subtotal: ₹{subtotal:.2f}")
+    pdf.drawString(300, summary_y - 20, f"Discount ({discount_percentage}%): -₹{discount_amount:.2f}")
+    pdf.drawString(300, summary_y - 40, f"Total Amount: ₹{total:.2f}")
+
+    # Footer
+    pdf.setFont("Helvetica-Oblique", 10)
+    pdf.drawCentredString(width / 2, 30, "Thank you for shopping with us!")
+
+    pdf.showPage()
+    pdf.save()
 
     buffer.seek(0)
+    filename = f"Invoice_{bill_number}.pdf"
 
-    # Send PDF as download
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=f"Invoice_{customer_name.replace(' ','_')}.pdf",
+        download_name=filename,
         mimetype='application/pdf'
     )
-
-    try:
-        customer_name = request.form.get('customer_name')
-        customer_number = request.form.get('customer_number')
-        product_ids = request.form.getlist('product_ids[]')
-        prices = request.form.getlist('product_prices[]')
-        discount = float(request.form.get('discount', 0))
-        payment_type = request.form.get('payment_type')
-
-        if not customer_name or not product_ids or not prices:
-            flash('Missing invoice data', 'error')
-            return redirect(url_for('invoice'))
-
-        total = sum([float(p) for p in prices if p.strip()])
-        final_total = total - (total * discount / 100)
-
-        # You can add logic to save invoices here
-
-        flash(f"Invoice generated successfully! Total: ₹{final_total:.2f}", "success")
-        return redirect(url_for('invoice'))
-
-    except Exception as e:
-        flash(f"Invoice generation failed: {str(e)}", 'error')
-        return redirect(url_for('invoice'))
-
 @app.route('/customer_database')
 def customer_database():
     if 'user' not in session:
