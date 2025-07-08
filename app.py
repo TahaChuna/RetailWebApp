@@ -102,8 +102,7 @@ def generate_invoice():
     from reportlab.pdfgen import canvas
     from reportlab.lib.pagesizes import A4
     from reportlab.lib import colors
-    from reportlab.platypus import Table, TableStyle, Paragraph, SimpleDocTemplate
-    from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+    from reportlab.platypus import Table, TableStyle
     from io import BytesIO
     from datetime import datetime
 
@@ -121,7 +120,7 @@ def generate_invoice():
         qty = 1
         amount = float(price)
         subtotal += amount
-        products.append([pid, qty, f"₹ {price}", f"₹ {price}"])
+        products.append([pid, qty, f"₹ {price}", f"₹ {amount}"])
 
     discount_amount = subtotal * (discount_percentage / 100)
     total_due = subtotal - discount_amount
@@ -132,35 +131,42 @@ def generate_invoice():
     width, height = A4
 
     # ===== HEADER =====
-    c.setFont("Helvetica-Bold", 40)
-    c.setFillColor(colors.HexColor("#000000"))
-    c.drawString(40, height - 60, "INVOICE")
-
-    # Customer name below INVOICE
-    c.setFont("Helvetica", 14)
+    c.setFont("Helvetica-Bold", 16)
     c.setFillColor(colors.black)
-    c.drawString(40, height - 90, f"Customer: {customer_name} | Mobile: {customer_number}")
+    c.drawString(40, height - 50, "DIAMOND KIDS WEAR & ESSENTIALS")
 
-    # Issued By on right
-    c.setFont("Helvetica-Bold", 10)
-    c.drawRightString(width - 40, height - 60, "ISSUED BY:")
     c.setFont("Helvetica", 10)
-    c.drawRightString(width - 40, height - 75, "DIAMOND KIDS WEAR AND ESSENTIALS")
-    c.drawRightString(width - 40, height - 90, "THANE - 400601")
-    c.drawRightString(width - 40, height - 105, "Mobile No: 9920752179")
+    c.drawString(40, height - 65, "Shiv Shree APT, Shop No 4, K-Villa, Rabodi, 400601")
 
     # Invoice details
     bill_number = get_next_bill_number()
     c.setFont("Helvetica", 10)
-    c.drawString(40, height - 120, f"Invoice No: {bill_number}")
-    c.drawString(200, height - 120, f"Date: {datetime.today().strftime('%d %b %Y')}")
+    c.drawString(40, height - 85, f"Invoice No: {bill_number}")
+    c.drawString(200, height - 85, f"Date: {datetime.today().strftime('%d %b %Y')}")
+
+    # Customer details
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(40, height - 105, "Customer Name:")
+    c.setFont("Helvetica", 10)
+    c.drawString(120, height - 105, customer_name)
+
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(40, height - 120, "Customer Mobile No:")
+    c.setFont("Helvetica", 10)
+    c.drawString(150, height - 120, customer_number)
 
     # ===== TABLE =====
-    data = [["POS", "DESCRIPTION", "QTY", "PRICE", "AMOUNT"]]
+    data = [["S.No", "Description", "Quantity", "Unit Price", "Amount"]]
     for i, row in enumerate(products, 1):
         data.append([str(i), row[0], str(row[1]), row[2], row[3]])
 
-    table = Table(data, colWidths=[30, 200, 50, 80, 80])
+    # Totals row placeholders
+    data.append(["", "", "", "Subtotal", f"₹ {subtotal:.2f}"])
+    data.append(["", "", "", f"Discount ({discount_percentage}%)", f"-₹ {discount_amount:.2f}"])
+    data.append(["", "", "", "Total Due", f"₹ {total_due:.2f}"])
+
+    # Create table
+    table = Table(data, colWidths=[40, 200, 60, 80, 80])
     style = TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
         ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
@@ -175,19 +181,10 @@ def generate_invoice():
     table_height = 20 * len(data)
     table.drawOn(c, 40, height - 150 - table_height)
 
-    # ===== TOTALS =====
-    y = height - 160 - table_height - 10
-    c.setFont("Helvetica-Bold", 12)
-    c.drawRightString(width - 40, y, f"Subtotal: ₹ {subtotal:.2f}")
-    y -= 15
-    c.drawRightString(width - 40, y, f"Discount ({discount_percentage}%): ₹ {discount_amount:.2f}")
-    y -= 15
-    c.drawRightString(width - 40, y, f"Total Amount to be Paid: ₹ {total_due:.2f}")
-
     # ===== WATERMARK =====
-    c.setFont("Helvetica-Bold", 16)
+    c.setFont("Helvetica-Bold", 14)
     c.setFillColor(colors.lightgrey)
-    c.drawCentredString(width/2, 60, "Thank you for shopping with DIAMOND KIDS WEAR! Adios!")
+    c.drawCentredString(width/2, 40, "Thank you for shopping with us!")
 
     # Finish PDF
     c.save()
@@ -201,7 +198,6 @@ def generate_invoice():
         download_name=filename,
         mimetype="application/pdf"
     )
-
 @app.route('/customer_database')
 def customer_database():
     if 'user' not in session:
