@@ -91,18 +91,11 @@ def current_standing():
 
     return render_template('current_standing.html', upload_success=upload_success, products=products)
 
-@app.route('/invoice', methods=['GET'])
-def invoice():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template("invoice.html", product_price_dict=product_price_dict)
-
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import landscape
     from reportlab.lib import colors
-    from reportlab.platypus import Table, TableStyle, Image
+    from reportlab.platypus import Table, TableStyle
     from io import BytesIO
     from datetime import datetime
 
@@ -120,7 +113,7 @@ def generate_invoice():
         qty = 1
         amount = float(price)
         subtotal += amount
-        products.append([pid, qty, f"₹ {price}", f"₹ {amount}"])
+        products.append([pid, qty, f"₹{price}", f"₹{amount}"])
 
     discount_amount = subtotal * (discount_percentage / 100)
     total_due = subtotal - discount_amount
@@ -128,70 +121,83 @@ def generate_invoice():
     # Create PDF buffer
     buffer = BytesIO()
 
-    # Small invoice page size
+    # Invoice-size page
     PAGE_WIDTH = 400
-    PAGE_HEIGHT = 600
+    PAGE_HEIGHT = 500
 
     c = canvas.Canvas(buffer, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
 
-    # === Optional background image ===
-    # If you have a PNG file in your app directory:
-    # c.drawImage("kids_theme.png", 0, 0, width=PAGE_WIDTH, height=PAGE_HEIGHT, mask='auto')
+    y = PAGE_HEIGHT - 30
 
-    # === Header ===
-    c.setFont("Helvetica-Bold", 18)
-    c.setFillColor(colors.HexColor("#2E86C1"))
-    c.drawString(20, PAGE_HEIGHT - 40, "DIAMOND KIDS WEAR & ESSENTIALS")
+    # Header Box
+    c.setFillColor(colors.HexColor("#FFB6C1"))
+    c.roundRect(10, y - 60, PAGE_WIDTH - 20, 60, 10, fill=1)
 
-    c.setFont("Helvetica", 9)
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(colors.darkblue)
+    c.drawCentredString(PAGE_WIDTH / 2, y - 20, "🌟 DIAMOND KIDS WEAR & ESSENTIALS 🌟")
+
+    c.setFont("Helvetica", 8)
     c.setFillColor(colors.black)
-    c.drawString(20, PAGE_HEIGHT - 55, "Shiv Shree APT, Shop No 4, K-Villa, Rabodi, 400601")
+    c.drawCentredString(PAGE_WIDTH / 2, y - 35, "Shiv Shree APT, Shop No 4, K-Villa, Rabodi, 400601")
+    c.drawCentredString(PAGE_WIDTH / 2, y - 47, "Mobile: 9920752179")
 
+    y -= 75
+
+    # Invoice Info
+    c.setFont("Helvetica-Bold", 9)
+    c.setFillColor(colors.black)
     bill_number = get_next_bill_number()
-    c.drawString(20, PAGE_HEIGHT - 70, f"Invoice No: {bill_number}")
-    c.drawString(200, PAGE_HEIGHT - 70, f"Date: {datetime.today().strftime('%d %b %Y')}")
+    c.drawString(20, y, f"Invoice No: {bill_number}")
+    c.drawRightString(PAGE_WIDTH - 20, y, f"Date: {datetime.today().strftime('%d-%b-%Y')}")
 
-    # Customer details
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(20, PAGE_HEIGHT - 90, "Customer Name:")
-    c.setFont("Helvetica", 10)
-    c.drawString(100, PAGE_HEIGHT - 90, customer_name)
-    c.setFont("Helvetica-Bold", 10)
-    c.drawString(20, PAGE_HEIGHT - 105, "Customer Mobile No:")
-    c.setFont("Helvetica", 10)
-    c.drawString(130, PAGE_HEIGHT - 105, customer_number)
+    y -= 20
 
-    # === Table ===
+    # Customer Info Box
+    c.setFillColor(colors.HexColor("#FFFACD"))
+    c.roundRect(10, y - 30, PAGE_WIDTH - 20, 30, 5, fill=1)
+    c.setFillColor(colors.black)
+    c.setFont("Helvetica-Bold", 9)
+    c.drawString(20, y - 10, f"Customer Name: {customer_name}")
+    c.drawString(20, y - 22, f"Mobile No: {customer_number}")
+
+    y -= 50
+
+    # Table Data
     data = [["S.No", "Description", "Qty", "Unit Price", "Amount"]]
     for i, row in enumerate(products, 1):
         data.append([str(i), row[0], str(row[1]), row[2], row[3]])
 
-    # Totals rows
-    data.append(["", "", "", "Subtotal", f"₹ {subtotal:.2f}"])
-    data.append(["", "", "", f"Discount ({discount_percentage}%)", f"-₹ {discount_amount:.2f}"])
-    data.append(["", "", "", "Total Due", f"₹ {total_due:.2f}"])
+    # Subtotal and Discount in same row
+    data.append(["", "", "", "Subtotal:", f"₹{subtotal:.2f}"])
+    data.append(["", "", "", f"Discount ({discount_percentage}%):", f"-₹{discount_amount:.2f}"])
+    data.append(["", "", "", "TOTAL DUE:", f"₹{total_due:.2f}"])
 
     table = Table(data, colWidths=[30, 140, 30, 70, 70])
     style = TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#AED6F1")),
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#ADD8E6")),
         ("TEXTCOLOR", (0,0), (-1,0), colors.black),
-        ("GRID", (0,0), (-1,-1), 0.3, colors.grey),
         ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
+        ("FONTSIZE", (0,0), (-1,-1), 8),
+        ("GRID", (0,0), (-1,-1), 0.3, colors.grey),
         ("ALIGN", (2,1), (-1,-1), "CENTER"),
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-        ("FONTSIZE", (0,0), (-1,-1), 9),
         ("BACKGROUND", (0,1), (-1,-1), colors.whitesmoke),
+        ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
+        ("SPAN", (-2,-1), (-2,-1)),
+        ("TEXTCOLOR", (-1,-3), (-1,-1), colors.darkred),
+        ("FONTNAME", (-1,-1), (-1,-1), "Helvetica-Bold"),
     ])
     table.setStyle(style)
 
     table.wrapOn(c, PAGE_WIDTH, PAGE_HEIGHT)
     table_height = 18 * len(data)
-    table.drawOn(c, 20, PAGE_HEIGHT - 130 - table_height)
+    table.drawOn(c, 10, y - table_height)
 
-    # === Watermark ===
-    c.setFont("Helvetica-Bold", 12)
-    c.setFillColor(colors.lightgrey)
-    c.drawCentredString(PAGE_WIDTH / 2, 30, "Thank you for shopping with us!")
+    # Footer
+    c.setFont("Helvetica-Bold", 10)
+    c.setFillColor(colors.HexColor("#FFA07A"))
+    c.drawCentredString(PAGE_WIDTH/2, 25, "🎈 Thank you for shopping with us! 🎈")
 
     c.save()
     buffer.seek(0)
@@ -204,6 +210,7 @@ def generate_invoice():
         download_name=filename,
         mimetype="application/pdf"
     )
+
 @app.route('/customer_database')
 def customer_database():
     if 'user' not in session:
@@ -233,6 +240,12 @@ def export_customers():
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
+
+@app.route('/invoice', methods=['GET'])
+def invoice():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template("invoice.html", product_price_dict=product_price_dict)
 
 if __name__ == '__main__':
     app.run(debug=True)
