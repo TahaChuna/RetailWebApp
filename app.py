@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request, redirect, url_for, session, send_file, flash
+from flask import (
+    Flask, render_template, request, redirect, url_for, session, send_file, flash
+)
 import pandas as pd
 import os
 import json
@@ -11,7 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
 app.debug = True
-app.secret_key = 'supersecretkey'  # Replace with a strong key in production
+app.secret_key = 'supersecretkey'
 
 # Configure SQLite database
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///invoices.db'
@@ -42,16 +44,8 @@ product_price_dict = {}
 
 # Bill number generator
 def get_next_bill_number():
-    filename = 'last_bill_number.txt'
-    if not os.path.exists(filename):
-        with open(filename, 'w') as f:
-            f.write('1')
-        return 1
-    with open(filename, 'r') as f:
-        number = int(f.read().strip())
-    with open(filename, 'w') as f:
-        f.write(str(number + 1))
-    return number
+    latest_invoice = Invoice.query.order_by(Invoice.bill_number.desc()).first()
+    return (latest_invoice.bill_number + 1) if latest_invoice else 1
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
@@ -111,33 +105,35 @@ def current_standing():
 
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
-    # Get form data
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
     customer_name = request.form.get('customer_name')
     customer_number = request.form.get('customer_number')
     product_ids = request.form.getlist('product_ids[]')
     product_prices = request.form.getlist('product_prices[]')
+    quantities = request.form.getlist('quantities[]')
     discount_percentage = float(request.form.get('discount') or 0)
 
-    # Build product data
     products = []
     subtotal = 0
-    for pid, price in zip(product_ids, product_prices):
-        qty = 1
-        amount = float(price)
+    for pid, price, qty in zip(product_ids, product_prices, quantities):
+        qty = int(qty)
+        unit_price = float(price)
+        amount = qty * unit_price
         subtotal += amount
-        products.append([pid, qty, "Rs. {:.2f}".format(price), "Rs. {:.2f}".format(amount)])
+        products.append([pid, qty, f"Rs. {unit_price:.2f}", f"Rs. {amount:.2f}"])
 
     discount_amount = subtotal * (discount_percentage / 100)
     total_due = subtotal - discount_amount
+    bill_number = get_next_bill_number()
 
-    # Create PDF buffer
     buffer = BytesIO()
     PAGE_WIDTH = 400
     PAGE_HEIGHT = 500
     c = canvas.Canvas(buffer, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
     y = PAGE_HEIGHT - 30
 
-    # Header Box
     c.setFillColor(colors.HexColor("#FFB6C1"))
     c.roundRect(10, y - 60, PAGE_WIDTH - 20, 60, 10, fill=1)
     c.setFont("Helvetica-Bold", 14)
@@ -149,15 +145,12 @@ def generate_invoice():
     c.drawCentredString(PAGE_WIDTH / 2, y - 47, "Mobile: 9920752179")
     y -= 75
 
-    # Invoice Info
     c.setFont("Helvetica-Bold", 9)
     c.setFillColor(colors.black)
-    bill_number = get_next_bill_number()
     c.drawString(20, y, f"Invoice No: {bill_number}")
     c.drawRightString(PAGE_WIDTH - 20, y, f"Date: {datetime.today().strftime('%d-%b-%Y')}")
     y -= 20
 
-    # Customer Info Box
     c.setFillColor(colors.HexColor("#FFFACD"))
     c.roundRect(10, y - 30, PAGE_WIDTH - 20, 30, 5, fill=1)
     c.setFillColor(colors.black)
@@ -166,13 +159,12 @@ def generate_invoice():
     c.drawString(20, y - 22, f"Mobile No: {customer_number}")
     y -= 50
 
-    # Table Data
     data = [["S.No", "Description", "Qty", "Unit Price", "Amount"]]
     for i, row in enumerate(products, 1):
         data.append([str(i), row[0], str(row[1]), row[2], row[3]])
-    data.append(["", "", "", "Subtotal", "Rs. {:.2f}".format(subtotal)])
-    data.append(["", "", "", f"Discount ({discount_percentage}%)", "-Rs. {:.2f}".format(discount_amount)])
-    data.append(["", "", "", "TOTAL DUE", "Rs. {:.2f}".format(total_due)])
+    data.append(["", "", "", "Subtotal", f"Rs. {subtotal:.2f}"])
+    data.append(["", "", "", f"Discount ({discount_percentage}%)", f"-Rs. {discount_amount:.2f}"])
+    data.append(["", "", "", "TOTAL DUE", f"Rs. {total_due:.2f}"])
 
     table = Table(data, colWidths=[30, 140, 30, 70, 70])
     style = TableStyle([
@@ -184,7 +176,6 @@ def generate_invoice():
         ("ALIGN", (2,1), (-1,-1), "CENTER"),
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
         ("BACKGROUND", (0,1), (-1,-1), colors.whitesmoke),
-        ("FONTNAME", (0,1), (-1,-1), "Helvetica"),
         ("TEXTCOLOR", (-1,-3), (-1,-1), colors.darkred),
         ("FONTNAME", (-1,-1), (-1,-1), "Helvetica-Bold"),
     ])
@@ -200,7 +191,6 @@ def generate_invoice():
     c.save()
     buffer.seek(0)
 
-    # Save to DB
     invoice = Invoice(
         bill_number=bill_number,
         date=datetime.now(),
@@ -214,11 +204,10 @@ def generate_invoice():
     db.session.add(invoice)
     db.session.commit()
 
-    filename = f"Invoice_{bill_number}.pdf"
     return send_file(
         buffer,
         as_attachment=True,
-        download_name=filename,
+        download_name=f"Invoice_{bill_number}.pdf",
         mimetype="application/pdf"
     )
 
@@ -246,6 +235,48 @@ def delete_invoice(invoice_id):
     flash("Invoice deleted successfully.", "success")
     return redirect(url_for('invoices'))
 
+@app.route('/customer_database')
+def customer_database():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    invoices = Invoice.query.order_by(Invoice.customer_name).all()
+    customer_dict = {}
+    for inv in invoices:
+        key = (inv.customer_name.strip(), inv.customer_number.strip())
+        if key not in customer_dict:
+            customer_dict[key] = []
+        customer_dict[key].append(str(inv.bill_number))
+    customer_data = [
+        {'name': name, 'mobile': mobile, 'bills': bill_numbers}
+        for (name, mobile), bill_numbers in customer_dict.items()
+    ]
+    return render_template('customer_database.html', customer_data=customer_data)
+
+@app.route('/export_customers', methods=['POST'])
+def export_customers():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    invoices = Invoice.query.order_by(Invoice.customer_name).all()
+    customer_dict = {}
+    for inv in invoices:
+        key = (inv.customer_name.strip(), inv.customer_number.strip())
+        if key not in customer_dict:
+            customer_dict[key] = []
+        customer_dict[key].append(str(inv.bill_number))
+    data = []
+    for (name, mobile), bills in customer_dict.items():
+        data.append({
+            "Customer Name": name,
+            "Mobile": mobile,
+            "Bill Numbers": ", ".join(bills)
+        })
+    df = pd.DataFrame(data)
+    output = BytesIO()
+    with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        df.to_excel(writer, index=False, sheet_name='Customers')
+    output.seek(0)
+    return send_file(output, download_name='customers.xlsx', as_attachment=True)
+
 @app.route('/export_invoices')
 def export_invoices():
     if 'user' not in session:
@@ -255,7 +286,7 @@ def export_invoices():
     for inv in invoices:
         data.append({
             "Invoice No": inv.bill_number,
-            "Date": inv.date.strftime('%Y-%m-%d %H:%M') if isinstance(inv.date, datetime) else str(inv.date),
+            "Date": inv.date.strftime('%Y-%m-%d %H:%M'),
             "Customer Name": inv.customer_name,
             "Mobile": inv.customer_number,
             "Subtotal": inv.subtotal,
@@ -270,4 +301,6 @@ def export_invoices():
     return send_file(output, download_name='invoices.xlsx', as_attachment=True)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    with app.app_context():
+        db.create_all()
+    app.run(debug=False)
