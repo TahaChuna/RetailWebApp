@@ -6,7 +6,7 @@
 <h2>📇 Customer Database</h2>
 
 {% if customer_data and customer_data|length > 0 %}
-<table border="1" cellpadding="10" cellspacing="0">
+<table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
     <thead style="background-color: #e0e0e0;">
         <tr>
             <th>Customer Name</th>
@@ -18,7 +18,7 @@
         {% for customer in customer_data %}
         <tr>
             <td>{{ customer.name }}</td>
-            <td>{{ customer.mobile or "N/A" }}</td>
+            <td>{{ customer.mobile if customer.mobile else 'N/A' }}</td>
             <td>{{ customer.bills | join(' - ') }}</td>
         </tr>
         {% endfor %}

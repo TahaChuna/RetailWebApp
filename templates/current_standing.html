@@ -7,9 +7,9 @@
 
 <!-- Upload Form -->
 <form method="POST" action="{{ url_for('current_standing') }}" enctype="multipart/form-data" style="margin-bottom: 20px;">
-    <label for="file">Upload Excel File:</label>
+    <label for="file"><strong>Upload Excel File:</strong></label>
     <input type="file" name="file" id="file" required>
-    <button type="submit">Upload</button>
+    <button type="submit" class="button">Upload</button>
 </form>
 
 <!-- Upload Success Message -->
@@ -17,13 +17,12 @@
     <p style="color: green; font-weight: bold;">✅ File uploaded successfully!</p>
 {% endif %}
 
-<!-- Check if products list exists and has data -->
+<!-- Product Table -->
 {% if products and products|length > 0 %}
-    <!-- Search Bar -->
+    <!-- Search -->
     <input type="text" id="searchInput" placeholder="Search by Product ID..." onkeyup="searchTable()" style="padding: 8px; width: 300px; margin-bottom: 20px;">
 
-    <!-- Product Table -->
-    <table id="productTable" border="1" cellpadding="10" cellspacing="0">
+    <table id="productTable" border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
         <thead style="background-color: #e0e0e0;">
             <tr>
                 <th>Product ID</th>
@@ -43,10 +42,10 @@
                 <td>{{ product.name }}</td>
                 <td>{{ product.qty_sold }}</td>
                 <td>{{ product.qty_remaining }}</td>
-                <td>{{ product.cost_price }}</td>
-                <td>{{ product.selling_price }}</td>
-                <td>{{ product.total_sales }}</td>
-                <td>{{ product.profit }}</td>
+                <td>₹{{ "%.2f"|format(product.cost_price) }}</td>
+                <td>₹{{ "%.2f"|format(product.selling_price) }}</td>
+                <td>₹{{ "%.2f"|format(product.total_sales) }}</td>
+                <td>₹{{ "%.2f"|format(product.profit) }}</td>
             </tr>
             {% endfor %}
         </tbody>
@@ -55,7 +54,7 @@
     <p style="color: red;">No product data available. Please upload a valid Excel file to view current standing.</p>
 {% endif %}
 
-<!-- Search Script -->
+<!-- JavaScript Search Filter -->
 <script>
 function searchTable() {
     const input = document.getElementById("searchInput");
@@ -64,10 +63,10 @@ function searchTable() {
     const tr = table.getElementsByTagName("tr");
 
     for (let i = 1; i < tr.length; i++) {
-        const td = tr[i].getElementsByTagName("td")[0]; // Search by Product ID
+        const td = tr[i].getElementsByTagName("td")[0];
         if (td) {
             const txtValue = td.textContent || td.innerText;
-            tr[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
+            tr[i].style.display = txtValue.toUpperCase().includes(filter) ? "" : "none";
         }
     }
 }

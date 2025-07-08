@@ -5,7 +5,7 @@
 {% block content %}
 <h2>🧾 Generate Invoice</h2>
 
-<form id="invoiceForm" method="POST" action="{{ url_for('generate_invoice') }}" target="_blank">
+<form id="invoiceForm" method="POST" action="{{ url_for('generate_invoice') }}" target="_blank" autocomplete="off">
     <div style="margin-bottom: 15px;">
         <label><strong>Customer Name <span style="color: red;">*</span>:</strong></label>
         <input type="text" name="customer_name" required>

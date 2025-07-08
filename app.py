@@ -300,6 +300,13 @@ def export_invoices():
     output.seek(0)
     return send_file(output, download_name='invoices.xlsx', as_attachment=True)
 
+@app.route("/init_db")
+def init_db():
+    db.create_all()
+    return "✅ Database initialized!"
+print("💡 Flask is running THIS file")
+    
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
