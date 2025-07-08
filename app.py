@@ -91,6 +91,12 @@ def current_standing():
 
     return render_template('current_standing.html', upload_success=upload_success, products=products)
 
+@app.route('/invoice', methods=['GET'])
+def invoice():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template("invoice.html", product_price_dict=product_price_dict)
+
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     from reportlab.pdfgen import canvas
