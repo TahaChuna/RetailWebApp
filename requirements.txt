@@ -10,3 +10,5 @@ MarkupSafe==3.0.2
 python-dateutil==2.9.0.post0
 tzdata==2025.2
 reportlab==4.1.0
+Flask-SQLAlchemy
+
