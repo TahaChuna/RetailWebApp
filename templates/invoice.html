@@ -19,7 +19,8 @@
     <div id="productList">
         <div class="product-entry" style="margin-bottom: 10px;">
             <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
-            <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()" required>
+            <input type="number" step="0.01" name="product_prices[]" placeholder="Price" oninput="calculateTotal()" required>
+            <input type="number" name="quantities[]" value="1" min="1" oninput="calculateTotal()" required>
         </div>
     </div>
     <button type="button" onclick="addProduct()">Add Another Product</button>
@@ -57,7 +58,8 @@ function addProduct() {
     entry.style.marginBottom = '10px';
     entry.innerHTML = `
         <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
-        <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()" required>
+        <input type="number" step="0.01" name="product_prices[]" placeholder="Price" oninput="calculateTotal()" required>
+        <input type="number" name="quantities[]" value="1" min="1" oninput="calculateTotal()" required>
     `;
     productList.appendChild(entry);
 }
@@ -75,11 +77,15 @@ function fetchPrice(input) {
 }
 
 function calculateTotal() {
-    const prices = document.getElementsByName('product_prices[]');
+    const priceInputs = document.getElementsByName('product_prices[]');
+    const qtyInputs = document.getElementsByName('quantities[]');
     let sum = 0;
-    for (let p of prices) {
-        const val = parseFloat(p.value);
-        if (!isNaN(val)) sum += val;
+    for (let i = 0; i < priceInputs.length; i++) {
+        const price = parseFloat(priceInputs[i].value);
+        const qty = parseInt(qtyInputs[i].value);
+        if (!isNaN(price) && !isNaN(qty)) {
+            sum += price * qty;
+        }
     }
 
     const discount = parseFloat(document.getElementById('discount').value) || 0;
