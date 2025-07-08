@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home - Diamond Kids Wear</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
@@ -13,7 +14,7 @@
             color: #333;
         }
 
-        .navbar {
+        nav.navbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -107,20 +108,21 @@
     </script>
 </head>
 <body>
-    <div class="navbar">
+    <nav class="navbar">
         <div class="nav-links">
             <a href="{{ url_for('home') }}">Home</a>
             <a href="{{ url_for('current_standing') }}">Inventory</a>
             <a href="{{ url_for('invoice') }}">Invoice Generation</a>
+            <a href="{{ url_for('invoices') }}">Invoice History</a>
         </div>
         <div class="timestamp">Current Time: <span id="time"></span></div>
         <form method="POST" action="{{ url_for('logout') }}">
             <button class="logout-btn">Logout</button>
         </form>
-    </div>
+    </nav>
 
     <div class="container">
-        <div class="shop-title">
+        <div class="shop-title" aria-label="DIAMOND KIDS WEAR">
             <span class="colorful">D</span>
             <span class="colorful">I</span>
             <span class="colorful">A</span>

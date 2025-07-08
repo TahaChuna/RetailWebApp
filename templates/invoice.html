@@ -7,7 +7,7 @@
 
 <form id="invoiceForm" method="POST" action="{{ url_for('generate_invoice') }}" target="_blank">
     <div style="margin-bottom: 15px;">
-        <label><strong>Customer Name<span style="color: red;">*</span>:</strong></label>
+        <label><strong>Customer Name <span style="color: red;">*</span>:</strong></label>
         <input type="text" name="customer_name" required>
     </div>
     <div style="margin-bottom: 15px;">
@@ -17,9 +17,9 @@
 
     <h3>➕ Add Products</h3>
     <div id="productList">
-        <div class="product-entry">
+        <div class="product-entry" style="margin-bottom: 10px;">
             <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
-            <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()">
+            <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()" required>
         </div>
     </div>
     <button type="button" onclick="addProduct()">Add Another Product</button>
@@ -54,9 +54,10 @@ function addProduct() {
     const productList = document.getElementById('productList');
     const entry = document.createElement('div');
     entry.className = 'product-entry';
+    entry.style.marginBottom = '10px';
     entry.innerHTML = `
         <input type="text" name="product_ids[]" placeholder="Enter Product ID" required oninput="fetchPrice(this)">
-        <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()">
+        <input type="text" name="product_prices[]" placeholder="Price" oninput="calculateTotal()" required>
     `;
     productList.appendChild(entry);
 }
@@ -65,7 +66,7 @@ function fetchPrice(input) {
     const productID = input.value.trim();
     const priceField = input.nextElementSibling;
 
-    if (productID in productPrices) {
+    if (productPrices.hasOwnProperty(productID)) {
         priceField.value = productPrices[productID];
     } else {
         priceField.value = '';
