@@ -91,18 +91,12 @@ def current_standing():
 
     return render_template('current_standing.html', upload_success=upload_success, products=products)
 
-@app.route('/invoice', methods=['GET'])
-def invoice():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template("invoice.html", product_price_dict=product_price_dict)
-
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     from reportlab.pdfgen import canvas
-    from reportlab.lib.pagesizes import A4
+    from reportlab.lib.pagesizes import landscape
     from reportlab.lib import colors
-    from reportlab.platypus import Table, TableStyle
+    from reportlab.platypus import Table, TableStyle, Image
     from io import BytesIO
     from datetime import datetime
 
@@ -127,66 +121,72 @@ def generate_invoice():
 
     # Create PDF buffer
     buffer = BytesIO()
-    c = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
 
-    # ===== HEADER =====
-    c.setFont("Helvetica-Bold", 16)
+    # Small invoice page size
+    PAGE_WIDTH = 400
+    PAGE_HEIGHT = 600
+
+    c = canvas.Canvas(buffer, pagesize=(PAGE_WIDTH, PAGE_HEIGHT))
+
+    # === Optional background image ===
+    # If you have a PNG file in your app directory:
+    # c.drawImage("kids_theme.png", 0, 0, width=PAGE_WIDTH, height=PAGE_HEIGHT, mask='auto')
+
+    # === Header ===
+    c.setFont("Helvetica-Bold", 18)
+    c.setFillColor(colors.HexColor("#2E86C1"))
+    c.drawString(20, PAGE_HEIGHT - 40, "DIAMOND KIDS WEAR & ESSENTIALS")
+
+    c.setFont("Helvetica", 9)
     c.setFillColor(colors.black)
-    c.drawString(40, height - 50, "DIAMOND KIDS WEAR & ESSENTIALS")
+    c.drawString(20, PAGE_HEIGHT - 55, "Shiv Shree APT, Shop No 4, K-Villa, Rabodi, 400601")
 
-    c.setFont("Helvetica", 10)
-    c.drawString(40, height - 65, "Shiv Shree APT, Shop No 4, K-Villa, Rabodi, 400601")
-
-    # Invoice details
     bill_number = get_next_bill_number()
-    c.setFont("Helvetica", 10)
-    c.drawString(40, height - 85, f"Invoice No: {bill_number}")
-    c.drawString(200, height - 85, f"Date: {datetime.today().strftime('%d %b %Y')}")
+    c.drawString(20, PAGE_HEIGHT - 70, f"Invoice No: {bill_number}")
+    c.drawString(200, PAGE_HEIGHT - 70, f"Date: {datetime.today().strftime('%d %b %Y')}")
 
     # Customer details
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(40, height - 105, "Customer Name:")
+    c.drawString(20, PAGE_HEIGHT - 90, "Customer Name:")
     c.setFont("Helvetica", 10)
-    c.drawString(120, height - 105, customer_name)
-
+    c.drawString(100, PAGE_HEIGHT - 90, customer_name)
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(40, height - 120, "Customer Mobile No:")
+    c.drawString(20, PAGE_HEIGHT - 105, "Customer Mobile No:")
     c.setFont("Helvetica", 10)
-    c.drawString(150, height - 120, customer_number)
+    c.drawString(130, PAGE_HEIGHT - 105, customer_number)
 
-    # ===== TABLE =====
-    data = [["S.No", "Description", "Quantity", "Unit Price", "Amount"]]
+    # === Table ===
+    data = [["S.No", "Description", "Qty", "Unit Price", "Amount"]]
     for i, row in enumerate(products, 1):
         data.append([str(i), row[0], str(row[1]), row[2], row[3]])
 
-    # Totals row placeholders
+    # Totals rows
     data.append(["", "", "", "Subtotal", f"₹ {subtotal:.2f}"])
     data.append(["", "", "", f"Discount ({discount_percentage}%)", f"-₹ {discount_amount:.2f}"])
     data.append(["", "", "", "Total Due", f"₹ {total_due:.2f}"])
 
-    # Create table
-    table = Table(data, colWidths=[40, 200, 60, 80, 80])
+    table = Table(data, colWidths=[30, 140, 30, 70, 70])
     style = TableStyle([
-        ("BACKGROUND", (0,0), (-1,0), colors.lightgrey),
-        ("GRID", (0,0), (-1,-1), 0.5, colors.grey),
+        ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#AED6F1")),
+        ("TEXTCOLOR", (0,0), (-1,0), colors.black),
+        ("GRID", (0,0), (-1,-1), 0.3, colors.grey),
         ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
         ("ALIGN", (2,1), (-1,-1), "CENTER"),
         ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-        ("FONTSIZE", (0,0), (-1,-1), 10),
+        ("FONTSIZE", (0,0), (-1,-1), 9),
+        ("BACKGROUND", (0,1), (-1,-1), colors.whitesmoke),
     ])
     table.setStyle(style)
 
-    table.wrapOn(c, width, height)
-    table_height = 20 * len(data)
-    table.drawOn(c, 40, height - 150 - table_height)
+    table.wrapOn(c, PAGE_WIDTH, PAGE_HEIGHT)
+    table_height = 18 * len(data)
+    table.drawOn(c, 20, PAGE_HEIGHT - 130 - table_height)
 
-    # ===== WATERMARK =====
-    c.setFont("Helvetica-Bold", 14)
+    # === Watermark ===
+    c.setFont("Helvetica-Bold", 12)
     c.setFillColor(colors.lightgrey)
-    c.drawCentredString(width/2, 40, "Thank you for shopping with us!")
+    c.drawCentredString(PAGE_WIDTH / 2, 30, "Thank you for shopping with us!")
 
-    # Finish PDF
     c.save()
     buffer.seek(0)
 
