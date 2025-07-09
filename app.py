@@ -47,6 +47,10 @@ def get_next_bill_number():
     latest_invoice = Invoice.query.order_by(Invoice.bill_number.desc()).first()
     return (latest_invoice.bill_number + 1) if latest_invoice else 1
 
+# ------------------------
+# Authentication
+# ------------------------
+
 @app.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -63,6 +67,10 @@ def login():
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
+
+# ------------------------
+# Home & Inventory
+# ------------------------
 
 @app.route('/home')
 def home():
@@ -103,6 +111,16 @@ def current_standing():
 
     return render_template('current_standing.html', upload_success=upload_success, products=products)
 
+# ------------------------
+# Invoice Generation
+# ------------------------
+
+@app.route('/invoice')
+def invoice():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+    return render_template("invoice.html", product_price_dict=product_price_dict)
+
 @app.route('/generate_invoice', methods=['POST'])
 def generate_invoice():
     if 'user' not in session:
@@ -128,6 +146,7 @@ def generate_invoice():
     total_due = subtotal - discount_amount
     bill_number = get_next_bill_number()
 
+    # Generate PDF
     buffer = BytesIO()
     PAGE_WIDTH = 400
     PAGE_HEIGHT = 500
@@ -146,7 +165,6 @@ def generate_invoice():
     y -= 75
 
     c.setFont("Helvetica-Bold", 9)
-    c.setFillColor(colors.black)
     c.drawString(20, y, f"Invoice No: {bill_number}")
     c.drawRightString(PAGE_WIDTH - 20, y, f"Date: {datetime.today().strftime('%d-%b-%Y')}")
     y -= 20
@@ -154,7 +172,6 @@ def generate_invoice():
     c.setFillColor(colors.HexColor("#FFFACD"))
     c.roundRect(10, y - 30, PAGE_WIDTH - 20, 30, 5, fill=1)
     c.setFillColor(colors.black)
-    c.setFont("Helvetica-Bold", 9)
     c.drawString(20, y - 10, f"Customer Name: {customer_name}")
     c.drawString(20, y - 22, f"Mobile No: {customer_number}")
     y -= 50
@@ -169,18 +186,11 @@ def generate_invoice():
     table = Table(data, colWidths=[30, 140, 30, 70, 70])
     style = TableStyle([
         ("BACKGROUND", (0,0), (-1,0), colors.HexColor("#ADD8E6")),
-        ("TEXTCOLOR", (0,0), (-1,0), colors.black),
-        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
-        ("FONTSIZE", (0,0), (-1,-1), 8),
         ("GRID", (0,0), (-1,-1), 0.3, colors.grey),
         ("ALIGN", (2,1), (-1,-1), "CENTER"),
-        ("VALIGN", (0,0), (-1,-1), "MIDDLE"),
-        ("BACKGROUND", (0,1), (-1,-1), colors.whitesmoke),
-        ("TEXTCOLOR", (-1,-3), (-1,-1), colors.darkred),
-        ("FONTNAME", (-1,-1), (-1,-1), "Helvetica-Bold"),
+        ("FONTNAME", (0,0), (-1,0), "Helvetica-Bold"),
     ])
     table.setStyle(style)
-
     table.wrapOn(c, PAGE_WIDTH, PAGE_HEIGHT)
     table_height = 18 * len(data)
     table.drawOn(c, 10, y - table_height)
@@ -191,6 +201,7 @@ def generate_invoice():
     c.save()
     buffer.seek(0)
 
+    # Save invoice to DB
     invoice = Invoice(
         bill_number=bill_number,
         date=datetime.now(),
@@ -211,11 +222,9 @@ def generate_invoice():
         mimetype="application/pdf"
     )
 
-@app.route('/invoice')
-def invoice():
-    if 'user' not in session:
-        return redirect(url_for('login'))
-    return render_template("invoice.html", product_price_dict=product_price_dict)
+# ------------------------
+# Invoice Listing
+# ------------------------
 
 @app.route('/invoices')
 def invoices():
@@ -235,6 +244,10 @@ def delete_invoice(invoice_id):
     flash("Invoice deleted successfully.", "success")
     return redirect(url_for('invoices'))
 
+# ------------------------
+# Customer Database
+# ------------------------
+
 @app.route('/customer_database')
 def customer_database():
     if 'user' not in session:
@@ -251,6 +264,10 @@ def customer_database():
         for (name, mobile), bill_numbers in customer_dict.items()
     ]
     return render_template('customer_database.html', customer_data=customer_data)
+
+# ------------------------
+# Export Routes
+# ------------------------
 
 @app.route('/export_customers', methods=['POST'])
 def export_customers():
@@ -304,8 +321,10 @@ def export_invoices():
 def init_db():
     db.create_all()
     return "✅ Database initialized!"
-print("💡 Flask is running THIS file")
-    
+
+# ------------------------
+# App Start
+# ------------------------
 
 if __name__ == '__main__':
     with app.app_context():
