@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 <!DOCTYPE html>
 <html>
@@ -28,6 +29,99 @@
         <p class="success">File uploaded and processed successfully!</p>
     {% endif %}
 
+=======
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory Standing</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+
+        h1 {
+            text-align: center;
+            color: #444;
+        }
+
+        form {
+            margin: 20px auto;
+            max-width: 600px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        form input[type="file"] {
+            margin-bottom: 10px;
+        }
+
+        form button {
+            padding: 8px 16px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        form button:hover {
+            background-color: #0056b3;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            background: white;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+        }
+
+        .success { color: green; font-weight: bold; text-align: center; }
+        .error { color: red; text-align: center; }
+    </style>
+</head>
+<body>
+
+    <h1>Current Inventory Standing</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    <form action="/inventory" method="post" enctype="multipart/form-data">
+        <label><strong>Select Excel file (.xlsx):</strong></label><br>
+        <input type="file" name="file" accept=".xlsx" required><br>
+        <button type="submit">Upload</button>
+    </form>
+
+    {% if upload_success %}
+        <p class="success">File uploaded and processed successfully!</p>
+    {% endif %}
+
+>>>>>>> ad059dc11c4e37f633c92c34ecc241a2c363df89
     {% if products %}
         <table>
             <tr>
@@ -54,7 +148,13 @@
             {% endfor %}
         </table>
     {% else %}
+<<<<<<< HEAD
         <p>No products to display. Please upload a valid Excel file.</p>
     {% endif %}
+=======
+        <p style="text-align: center;">No products to display. Please upload a valid Excel file.</p>
+    {% endif %}
+
+>>>>>>> ad059dc11c4e37f633c92c34ecc241a2c363df89
 </body>
 </html>
