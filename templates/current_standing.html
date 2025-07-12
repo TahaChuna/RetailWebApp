@@ -1,74 +1,60 @@
-{% extends 'dashboard.html' %}
 
-{% block title %}Current Standing - Diamond Kids Wear{% endblock %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Inventory Standing</title>
+    <style>
+        table { width: 100%%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .success { color: green; font-weight: bold; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Current Inventory Standing</h1>
 
-{% block content %}
-<h2>📊 Current Standing of the Business</h2>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul>
+        {% for category, message in messages %}
+          <li class="{{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
 
-<!-- Upload Form -->
-<form method="POST" action="{{ url_for('current_standing') }}" enctype="multipart/form-data" style="margin-bottom: 20px;">
-    <label for="file"><strong>Upload Excel File:</strong></label>
-    <input type="file" name="file" id="file" required>
-    <button type="submit" class="button">Upload</button>
-</form>
+    {% if upload_success %}
+        <p class="success">File uploaded and processed successfully!</p>
+    {% endif %}
 
-<!-- Upload Success Message -->
-{% if upload_success %}
-    <p style="color: green; font-weight: bold;">✅ File uploaded successfully!</p>
-{% endif %}
-
-<!-- Product Table -->
-{% if products and products|length > 0 %}
-    <!-- Search -->
-    <input type="text" id="searchInput" placeholder="Search by Product ID..." onkeyup="searchTable()" style="padding: 8px; width: 300px; margin-bottom: 20px;">
-
-    <table id="productTable" border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
-        <thead style="background-color: #e0e0e0;">
+    {% if products %}
+        <table>
             <tr>
                 <th>Product ID</th>
-                <th>Product Name</th>
+                <th>Name</th>
                 <th>Quantity Sold</th>
-                <th>Remaining Quantity</th>
+                <th>Quantity Remaining</th>
                 <th>Cost Price</th>
                 <th>Selling Price</th>
                 <th>Total Sales</th>
                 <th>Profit</th>
             </tr>
-        </thead>
-        <tbody>
-            {% for product in products %}
+            {% for p in products %}
             <tr>
-                <td>{{ product.id }}</td>
-                <td>{{ product.name }}</td>
-                <td>{{ product.qty_sold }}</td>
-                <td>{{ product.qty_remaining }}</td>
-                <td>₹{{ "%.2f"|format(product.cost_price) }}</td>
-                <td>₹{{ "%.2f"|format(product.selling_price) }}</td>
-                <td>₹{{ "%.2f"|format(product.total_sales) }}</td>
-                <td>₹{{ "%.2f"|format(product.profit) }}</td>
+                <td>{{ p.id }}</td>
+                <td>{{ p.name }}</td>
+                <td>{{ p.qty_sold }}</td>
+                <td>{{ p.qty_remaining }}</td>
+                <td>{{ p.cost_price }}</td>
+                <td>{{ p.selling_price }}</td>
+                <td>{{ p.total_sales }}</td>
+                <td>{{ p.profit }}</td>
             </tr>
             {% endfor %}
-        </tbody>
-    </table>
-{% else %}
-    <p style="color: red;">No product data available. Please upload a valid Excel file to view current standing.</p>
-{% endif %}
-
-<!-- JavaScript Search Filter -->
-<script>
-function searchTable() {
-    const input = document.getElementById("searchInput");
-    const filter = input.value.toUpperCase();
-    const table = document.getElementById("productTable");
-    const tr = table.getElementsByTagName("tr");
-
-    for (let i = 1; i < tr.length; i++) {
-        const td = tr[i].getElementsByTagName("td")[0];
-        if (td) {
-            const txtValue = td.textContent || td.innerText;
-            tr[i].style.display = txtValue.toUpperCase().includes(filter) ? "" : "none";
-        }
-    }
-}
-</script>
-{% endblock %}
+        </table>
+    {% else %}
+        <p>No products to display. Please upload a valid Excel file.</p>
+    {% endif %}
+</body>
+</html>
