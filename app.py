@@ -78,7 +78,8 @@ def home():
         return redirect(url_for('login'))
     return render_template('home.html')
 
-@app.route('/current_standing', methods=['GET', 'POST'])
+# @app.route('/current_standing', methods=['GET', 'POST'])
+@app.route('/inventory', methods=['GET', 'POST'])
 def current_standing():
     if 'user' not in session:
         return redirect(url_for('login'))
